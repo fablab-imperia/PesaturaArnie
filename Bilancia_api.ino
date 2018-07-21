@@ -1,82 +1,124 @@
-#define SerialMon Serial
-/*#define TINY_GSM_MODEM_SIM900
-#define TINY_GSM_RX_BUFFER 512
-#define SMS_TARGET  "+393493140191"
-*/
 #include "HX711.h"
-//#include <TinyGsmClient.h>
-#include <SoftwareSerial.h>
 
+#define TINY_GSM_MODEM_UBLOX
 
+#include <TinyGsmClient.h>
+#include <PubSubClient.h>
 
-SoftwareSerial SIM900(7, 8); // RX, TX
+#define SerialMon Serial
+#define SerialAT SerialGSM
+
+#define ADAFRUIT_USERNAME  "stefanosemeria"
+#define AIO_KEY  "a0254d03dfdf4f35bbfd65874fc7b912"
+#define FEED_PATH ADAFRUIT_USERNAME "/feeds/peso/"  
 
 const char apn[]  = "internet.wind";
 const char user[] = "";
 const char pass[] = "";
 
-HX711 scale;
-//TinyGsm modem(SerialAT);
+const char* broker = "io.adafruit.com";
 
-String imei;
+//const char* topic_peso = "Bilancia/Peso";
+
+TinyGsm modem(SerialAT);
+TinyGsmClient client(modem);
+
+PubSubClient mqtt(broker, 1883, client);
+
+//PubSubClient mqtt(client);
+
+HX711 scale;
+
+boolean mqttConnect() {
+  SerialMon.print("Connecting to ");
+  SerialMon.print(broker);
+
+  // Connect to MQTT Broker
+  //boolean status = mqtt.connect("GsmClientTest");
+
+  // Or, if you want to authenticate MQTT:
+  //boolean status = mqtt.connect("GsmClientName", "mqtt_user", "mqtt_pass");
+  bool status = mqtt.connect(ADAFRUIT_USERNAME, AIO_KEY, "");
+
+  if (status == false) {
+    SerialMon.println(" fail");
+    return false;
+  }
+  SerialMon.println(" OK");
+  return mqtt.connected();
+}
+
+void mqtt_init(){
+
+  pinMode(GSM_DTR, OUTPUT);         // Accendi modulo GPRS
+  digitalWrite(GSM_DTR, LOW);
+  delay(5);
+
+  pinMode(GSM_RESETN, OUTPUT);
+  digitalWrite(GSM_RESETN, HIGH);
+  delay(100);
+  digitalWrite(GSM_RESETN, LOW);
+
+  SerialMon.begin(115200);
+  delay(10);
+
+  SerialAT.begin(115200);
+  delay(3000);
+  
+  SerialMon.println("Initializing modem...");
+  modem.restart();
+  
+  String modemInfo = modem.getModemInfo();
+  SerialMon.print("Modem: ");
+  SerialMon.println(modemInfo);
+
+  // Unlock your SIM card with a PIN
+  //modem.simUnlock("1234");
+
+  SerialMon.print("Waiting for network...");
+  if (!modem.waitForNetwork()) {
+    SerialMon.println(" fail");
+    while (true);
+  }
+  SerialMon.println(" OK");
+
+  SerialMon.print("Connecting to ");
+  SerialMon.print(apn);
+  if (!modem.gprsConnect(apn, user, pass)) {
+    SerialMon.println(" fail");
+    while (true);
+  }
+  SerialMon.println(" OK");
+}
 
 void setup() {
 
-  SerialMon.begin(38400);
+  SerialAT.begin(115200);
 
- // SerialAT.begin(38400);
-  delay(3000);
+  mqtt_init();
 
-   SIM900.begin(19200);
-  // Give time to your GSM shield log on to network
-  delay(20000);   
+//  mqtt.setServer(broker, 1883);
   
 
- /* 
-SerialMon.println("OK0");
- // DBG("Initializing modem...");
-  if (!modem.restart()) {
-    SerialMon.println("OK4");
-    delay(10000);
-    return;
-  }
-SerialMon.println("OK1");
-  String modemInfo = modem.getModemInfo();
-  DBG("Modem:", modemInfo);
-
-
-SerialMon.println("OK2");
-
- // DBG("Waiting for network...");
-  if (!modem.waitForNetwork()) {
-    delay(10000);
-    return;
-  }
-
-SerialMon.println("OK3");
-
-  imei = modem.getIMEI();
-
- bool res = modem.sendSMS(SMS_TARGET, String("Hello from ") + imei);
-*/
   SerialMon.println("Initializing the scale");
   // parameter "gain" is ommited; the default value 128 is used by the library
   // HX711.DOUT	- pin #A1
   // HX711.PD_SCK	- pin #A0
-  scale.begin(A5, A0);
+  scale.begin(A1, A0);
 
   scale.set_scale(-18200);                      // this value is obtained by calibrating the scale with known weights; see the README for details
   scale.tare();				        // reset the scale to 0
 
 
-  SerialMon.println("Readings:");
 }
 
 void loop() {
-  SerialMon.print("one reading:\t");
-  SerialMon.print(scale.get_units(), 1);
-  SerialMon.print("\t| average:\t");
-  SerialMon.println(scale.get_units(20), 1);
+
+  
+  Serial.print("one reading:\t");
+  Serial.print(scale.get_units(), 1);
+  Serial.print("\t| average:\t");
+  Serial.println(scale.get_units(20), 1);
 
   scale.power_down();			        // put the ADC in sleep mode
   delay(500);
@@ -84,28 +126,18 @@ void loop() {
 
   
   // bool res = modem.sendSMS(SMS_TARGET, String("Hello from ") + imei);
-  //SerialMon.println(res);
+  //Serial.println(res);
 
   delay(2000);
 
-SIM900.print("AT+CMGF=1\r"); 
-  delay(100);
-SerialMon.print("Inizio");
-  // REPLACE THE X's WITH THE RECIPIENT'S MOBILE NUMBER
-  // USE INTERNATIONAL FORMAT CODE FOR MOBILE NUMBERS
-  SIM900.println("AT + CMGS = \"+393493140191\""); 
-  delay(100);
-  SerialMon.print("Mezzo");
-  // REPLACE WITH YOUR OWN SMS MESSAGE CONTENT
-  SIM900.println(scale.get_units(20)); 
-  delay(100);
-
-SerialMon.print("Fine");
-  // End AT command with a ^Z, ASCII code 26
-  SIM900.println((char)26); 
-  delay(100);
-  SIM900.println();
-  // Give module time to send SMS
-  delay(60000); 
+  float peso = scale.get_units(20);
+  while(!mqtt.connected()){
+    mqttConnect();
+  }
+  
+ // mqtt.publish(topic_peso, String(peso).c_str());
+  mqtt.publish(FEED_PATH, String(peso).c_str());
+  
+  delay(10000); 
 
 }
