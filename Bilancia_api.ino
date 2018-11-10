@@ -1,113 +1,99 @@
-#include "HX711.h"
-
-#define TINY_GSM_MODEM_UBLOX
-
-#include <TinyGsmClient.h>
-#include <PubSubClient.h>
-
 #define SerialMon Serial
 #define SerialAT SerialGSM
+#define TINY_GSM_MODEM_UBLOX
 
-#define ADAFRUIT_USERNAME  "stefanosemeria"
+#include "HX711.h"                                                        // Per gestire la bilancia
+#include <RTCZero.h>                                                      // Par gestire la sleep mode
+#include <TinyGsmClient.h>                                                // Per gestire il modem GSM
+#include <PubSubClient.h>                                                 // Per pubblicare messaggi via MQTT
+
+#define ADAFRUIT_USERNAME  "stefanosemeria"                               // Credenziali broker MQTT Adafruit
 #define AIO_KEY  "a0254d03dfdf4f35bbfd65874fc7b912"
-#define FEED_PATH ADAFRUIT_USERNAME "/feeds/peso/"  
+#define FEED_PATH_PESO "stefanosemeria/feeds/Peso"                        // Feed peso
+#define FEED_PATH_BATTERIA "stefanosemeria/feeds/Batteria"                // Feed stato batteria
+#define FEED_PATH_POSIZIONE "stefanosemeria/feeds/Posizione/csv"          // Feed posizione GPS
+#define FEED_DEBUG "stefanosemeria/feeds/Debug"                           // Feed debug
 
-const char apn[]  = "internet.wind";
+RTCZero rtc;
+HX711 scale;
+
+//const char apn[]  = "internet.wind";                            // Credenziali modem GSM ---------------------------------------------------------------------------------
+const char apn[] = "iliad";
 const char user[] = "";
 const char pass[] = "";
 
-const char* broker = "io.adafruit.com";
+const char* broker = "io.adafruit.com";                         // Broker MQTT
 
-//const char* topic_peso = "Bilancia/Peso";
+
+const byte secondi_default = 0;                                 //
+const byte minuti_default = 40;                                 //     Questa è l'ora a cui mandare i dati  ------------------------------------------------------------------
+const byte ore_default = 18;                                     // ----------------------------------------------------------------------------------------------------------
+
+double latitudine_casa = 0.0;                                   // Coordinate in cui si trova di solito l'arnia
+double longitudine_casa = 0.0;
+bool casa_trovata;                                              // Controllo se ho trovato le coordinate in cui si trova di solito l'arnia
+
+double latitud;                                                 // Coordinate in cui si trova l'arnia effettivamente
+double longitud;
 
 TinyGsm modem(SerialAT);
 TinyGsmClient client(modem);
 
 PubSubClient mqtt(broker, 1883, client);
 
-//PubSubClient mqtt(client);
 
-HX711 scale;
-
-boolean mqttConnect() {
-  SerialMon.print("Connecting to ");
-  SerialMon.print(broker);
-
-  // Connect to MQTT Broker
-  //boolean status = mqtt.connect("GsmClientTest");
-
-  // Or, if you want to authenticate MQTT:
-  //boolean status = mqtt.connect("GsmClientName", "mqtt_user", "mqtt_pass");
-  bool status = mqtt.connect(ADAFRUIT_USERNAME, AIO_KEY, "");
-
-  if (status == false) {
-    SerialMon.println(" fail");
-    return false;
-  }
-  SerialMon.println(" OK");
-  return mqtt.connected();
-}
-
-void mqtt_init(){
-
-  pinMode(GSM_DTR, OUTPUT);         // Accendi modulo GPRS
-  digitalWrite(GSM_DTR, LOW);
-  delay(5);
-
-  pinMode(GSM_RESETN, OUTPUT);
-  digitalWrite(GSM_RESETN, HIGH);
-  delay(100);
-  digitalWrite(GSM_RESETN, LOW);
-
-  SerialMon.begin(115200);
-  delay(10);
-
-  SerialAT.begin(115200);
-  delay(3000);
-  
-  SerialMon.println("Initializing modem...");
-  modem.restart();
-  
-  String modemInfo = modem.getModemInfo();
-  SerialMon.print("Modem: ");
-  SerialMon.println(modemInfo);
-
-  // Unlock your SIM card with a PIN
-  //modem.simUnlock("1234");
-
-  SerialMon.print("Waiting for network...");
-  if (!modem.waitForNetwork()) {
-    SerialMon.println(" fail");
-    while (true);
-  }
-  SerialMon.println(" OK");
-
-  SerialMon.print("Connecting to ");
-  SerialMon.print(apn);
-  if (!modem.gprsConnect(apn, user, pass)) {
-    SerialMon.println(" fail");
-    while (true);
-  }
-  SerialMon.println(" OK");
-}
 
 void setup() {
 
-  SerialAT.begin(115200);
+  SerialAT.begin(9600);                                         // Trasmissione seriale
+  Serial1.begin(9600);
 
-  mqtt_init();
+  delay(5000);
 
-//  mqtt.setServer(broker, 1883);
+  pinMode(A3, INPUT);
+
+  mqtt_init();                                                  // Connetto alla rete GPRS e al broker mqtt
+
+
+  /*trova_casa();
+
+
+  rtc.begin();                                                  // Inizializzo l' RTC interno
+
+  String stringa = get_stringa();                               // Imposto l' ora con i dati del GPS
+  int ora = orario_ore(stringa);
+  int minuti = orario_minuti(stringa);
+  int secondi = orario_secondi(stringa);
   
+  unsigned long inizio_orario = millis();
+  while((ora == 99 || minuti == 99 || secondi == 99) && millis()-inizio_orario < 600000){       // Aspetto dati validi dal GPS
+    stringa = get_stringa();
+    ora = orario_ore(stringa);
+    minuti = orario_minuti(stringa);
+    secondi = orario_secondi(stringa);
+  }
 
+  
+  if (millis()-inizio_orario >= 600000){                        // Se i dati non sono validi imposto un'ora a caso che verrà corretta in seguito
+    rtc.setTime(byte(1), byte(0), byte(0));
+    mqtt.publish(FEED_DEBUG, "Errore impostazione ora");
+  } else  {
+    rtc.setTime(byte(ora), byte(minuti), byte(secondi));        // Se i dati sono validi imposto l' ora
+    mqtt.publish(FEED_DEBUG, String("Impostata ora: "+String(ora)+" h, "+String(minuti)+" min").c_str());
+  }
+
+  delay(15000);
+
+
+*/
   SerialMon.println("Initializing the scale");
-  // parameter "gain" is ommited; the default value 128 is used by the library
-  // HX711.DOUT	- pin #A1
-  // HX711.PD_SCK	- pin #A0
-  scale.begin(A1, A0);
 
-  scale.set_scale(-18200);                      // this value is obtained by calibrating the scale with known weights; see the README for details
-  scale.tare();				        // reset the scale to 0
+  scale.begin(A1, A0);                                            // HX711.DOUT  - pin #A1            HX711.PD_SCK - pin #A0
+
+  scale.set_scale(-18200);                                      // Calibro la scala (vedere il file README della libreria HX711) 
+  scale.tare();				                                          // Taro la scala
+
+
 
 
 }
@@ -120,24 +106,67 @@ void loop() {
   Serial.print("\t| average:\t");
   Serial.println(scale.get_units(20), 1);
 
-  scale.power_down();			        // put the ADC in sleep mode
-  delay(500);
-  scale.power_up();
-
-  
-  // bool res = modem.sendSMS(SMS_TARGET, String("Hello from ") + imei);
-  //Serial.println(res);
 
   delay(2000);
 
-  float peso = scale.get_units(20);
+  float peso = abs(scale.get_units(20));                             // Medio 20 letture per avere un peso affidabile
+
   while(!mqtt.connected()){
     mqttConnect();
   }
-  
- // mqtt.publish(topic_peso, String(peso).c_str());
-  mqtt.publish(FEED_PATH, String(peso).c_str());
-  
-  delay(10000); 
 
+  mqtt.publish(FEED_PATH_PESO, String(peso+100).c_str());          // Pubblico il peso        --------------------------------------------------------- togliere +100
+  float batteria = livello_batteria();
+  mqtt.publish(FEED_PATH_BATTERIA, String(batteria).c_str());       // Pubblico lo stato della batteria in percentuale
+  mqtt.publish(FEED_DEBUG, String(batteria).c_str());
+  mqtt.publish(FEED_DEBUG, String(peso).c_str());
+
+
+  if (!casa_trovata){
+    trova_casa();
+  }
+
+  String posizione = GPS(3);                                        // Controllo se la posizione GPS è affidabile
+  unsigned long inizio_GPS = millis();
+  while(posizione == "0.000000000000000,0.000000000000000" && millis()-inizio_GPS < 600000){
+    posizione = GPS(3);
+    latitud = GPS(1).toDouble();
+    longitud = GPS(2).toDouble();
+  }
+
+  if (millis()-inizio_GPS < 600000){                                                // Se la posizione è affidabile la pubblico
+    mqtt.publish(FEED_PATH_POSIZIONE, String("1,"+posizione+",2").c_str());         // Se l'arnia è stata spostata chiamo Allarme_GPS()
+    if(abs(latitudine_casa-latitud)>0.001 || abs(longitudine_casa-longitud)>0.001){allarme_GPS();}             // Controllare soglia minima!!
+  } else {
+    Serial.println("Errore gps");
+    mqtt.publish(FEED_DEBUG, "Errore gps");
+    delay(10000);
+  }
+
+  delay(5000);
+
+
+
+  String stringa = get_stringa();                                   // Ripeto l'impostazione dell'ora per correggere eventuali errori
+  int ora = orario_ore(stringa);
+  int minuti = orario_minuti(stringa);
+  int secondi = orario_secondi(stringa);
+  
+  unsigned long inizio_orario = millis();
+  while((ora == 99 || minuti == 99 || secondi == 99) && millis()-inizio_orario < 300000){
+    stringa = get_stringa();
+    ora = orario_ore(stringa);
+    minuti = orario_minuti(stringa);
+    secondi = orario_secondi(stringa);
+  }
+
+  if (millis()-inizio_orario < 600000){                             // Se l'ora è affidabile la imposto altrimenti non faccio nulla
+    rtc.setTime(byte(ora), byte(minuti), byte(secondi));
+    mqtt.publish(FEED_DEBUG, String("Impostata ora: "+String(ora)+" h, "+String(minuti)+" min").c_str());
+  } else {
+    mqtt.publish(FEED_DEBUG, "Errore impostazione ora");
+  }
+
+  spegni_tutto(0, 0, 0);                                            // Deep sleep fino a domani alle 4:30:00 (default)
 }
+
