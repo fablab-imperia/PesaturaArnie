@@ -1,11 +1,6 @@
 
 void spegni_tutto(int ore, int minuti, int secondi){
 
-  SerialAT.write("AT+CPWROFF");
-  scale.power_down();
-
-
-
   /* Change these values to set the current initial date */
   const byte day = 1;
   const byte month = 1;
@@ -16,7 +11,7 @@ void spegni_tutto(int ore, int minuti, int secondi){
 
   if(ore == 0 && minuti == 0 && secondi == 0){
 
-    rtc.setAlarmDate(day + 1, month, year);
+    rtc.setAlarmDate(day + 0, month, year);     //------------------------------------------------------ +1
 
     ore = ore_default;
     minuti = minuti_default;
@@ -32,13 +27,33 @@ void spegni_tutto(int ore, int minuti, int secondi){
     rtc.setAlarmDate(day + int(ore/24), month, year);
 
     ore = ore%24;
-
   }
 
 //  rtc.setAlarmTime(int(secondi/3600)%24+1, int(secondi/60)%60, secondi%60);
 
   rtc.setAlarmTime(ore, minuti, secondi);
   rtc.enableAlarm(rtc.MATCH_HHMMSS);
+
+  Serial.print("Ore:  ");
+  Serial.print(ore);
+  Serial.print("  Minuti:  ");
+  Serial.print(minuti);
+  Serial.print("  Sec:  ");
+  Serial.println(secondi);
+
+  Serial.print("Ore attuale:  ");
+  Serial.print(rtc.getHours());
+  Serial.print("  Minuti attuali:  ");
+  Serial.print(rtc.getMinutes());
+  Serial.print("  Sec attuale:  ");
+  Serial.println(rtc.getSeconds());
+
+  mqtt.publish(FEED_DEBUG, String("Adesso: "+String(rtc.getHours())+":"+String(rtc.getMinutes())+":"+String(rtc.getSeconds())).c_str());
+  mqtt.publish(FEED_DEBUG, String("Sveglia: "+String(ore)+":"+String(minuti)+":"+String(secondi)).c_str());
+
+  SerialAT.write("AT+CPWROFF");
+  scale.power_down();
+
 
   Serial.println("Sleep mode!!!");
   rtc.standbyMode();

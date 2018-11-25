@@ -1,5 +1,5 @@
-String checksum(String messaggio){                                      // Calcola il c
-  int i = 1;
+/*String checksum(String messaggio){                                      // Calcola il checksum
+  int i = 1;                                                            // Non funziona con il nuovo GPS
   char check = messaggio[0];
   while (messaggio[i] != '*'){
      check = check^messaggio[i];
@@ -13,5 +13,5 @@ String checksum(String messaggio){                                      // Calco
   String b = String(cifre[b_int]);
   
   return(a+b);
-}
+}*/
 

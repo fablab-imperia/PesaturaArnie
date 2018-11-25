@@ -3,7 +3,7 @@ int orario_ore(String stringa) {
   int ora = 99;
 
   //stringa = "GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47";
-  if (stringa[0] == 'G' && stringa[1] == 'P' && stringa[2] == 'G' && stringa[3] == 'G' && stringa[4] == 'A'){
+  if (stringa[0] == 'G' && stringa[1] == 'N' && stringa[2] == 'G' && stringa[3] == 'G' && stringa[4] == 'A'){
 //    Serial.println(stringa);
     String ora_stringa = trova_valore_ora(1, stringa);
     ora_stringa = String(ora_stringa[0]) + String(ora_stringa[1]);
@@ -26,7 +26,7 @@ int orario_minuti(String stringa) {
   int minuti = 99;
 
   //stringa = "GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47";
-  if (stringa[0] == 'G' && stringa[1] == 'P' && stringa[2] == 'G' && stringa[3] == 'G' && stringa[4] == 'A'){
+  if (stringa[0] == 'G' && stringa[1] == 'N' && stringa[2] == 'G' && stringa[3] == 'G' && stringa[4] == 'A'){
 //    Serial.println(stringa);
     String minuti_stringa = trova_valore_ora(1, stringa);
     minuti_stringa = String(minuti_stringa[2]) + String(minuti_stringa[3]);
@@ -50,7 +50,7 @@ int orario_secondi(String stringa) {
   int secondi = 99;
 
   //stringa = "GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47";
-  if (stringa[0] == 'G' && stringa[1] == 'P' && stringa[2] == 'G' && stringa[3] == 'G' && stringa[4] == 'A'){
+  if (stringa[0] == 'G' && stringa[1] == 'N' && stringa[2] == 'G' && stringa[3] == 'G' && stringa[4] == 'A'){
 //    Serial.println(stringa);
     String secondi_stringa = trova_valore_ora(1, stringa);
     secondi_stringa = String(secondi_stringa[4]) + String(secondi_stringa[5]);
@@ -82,7 +82,7 @@ String get_stringa(){
     }
   }
 
-  String check = String(Serial1.read()) + String(Serial1.read());
+  /*String check = String(Serial1.read()) + String(Serial1.read());           // Problema con checksum
 
   Serial.println(stringa);
 
@@ -90,7 +90,9 @@ String get_stringa(){
     return(stringa);
   } else {
     return("GPGGA,,,,,,,,,,,,,,*");                             // Se ci sono errori
-  }
+  }*/
+
+  return(stringa);
 }
 
 
