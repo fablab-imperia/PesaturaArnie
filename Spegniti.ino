@@ -1,65 +1,109 @@
 
-void spegni_tutto(int ore, int minuti, int secondi){
+void spegni_tutto(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia, byte giorni){
 
-  /* Change these values to set the current initial date */
-  const byte day = 1;
-  const byte month = 1;
+/*
+  const byte day = 10;
+  const byte month = 10;
   const byte year = 18;
 
-  rtc.setDate(day, month, year);
+  DEBUG_PRINT("spegni_tutto() > Setto data a ");
+  DEBUG_PRINT(day);
+  DEBUG_PRINT("/");
+  DEBUG_PRINT(month);
+  DEBUG_PRINT("/");
+  DEBUG_PRINTLN(year);
+  
+//  rtc.setDate(day, month, year);
 
-
-  if(ore == 0 && minuti == 0 && secondi == 0){
-
-    rtc.setAlarmDate(day + 0, month, year);     //------------------------------------------------------ +1
-
-    ore = ore_default;
-    minuti = minuti_default;
-    secondi = secondi_default;
-
-  } else {
+  #ifdef DEBUG
+    rtc.setAlarmDate(day, month, year);
     
-    minuti = minuti + int(secondi/60);
-    secondi = secondi%60;
-    ore = ore + int(minuti/60);
-    minuti = minuti%60;
+    DEBUG_PRINT("spegni_tutto() > Setto data sveglia a ");
+    DEBUG_PRINT(day);
+    DEBUG_PRINT("/");
+    DEBUG_PRINT(month);
+    DEBUG_PRINT("/");
+    DEBUG_PRINTLN(year);
+  #else
+    rtc.setAlarmDate(day + 1, month, year);
 
-    rtc.setAlarmDate(day + int(ore/24), month, year);
+    DEBUG_PRINT("spegni_tutto() > Setto data sveglia a ");
+    DEBUG_PRINT(day + 1);
+    DEBUG_PRINT("/");
+    DEBUG_PRINT(month);
+    DEBUG_PRINT("/");
+    DEBUG_PRINTLN(year);
+  #endif
+*/
+  
+//  rtc.setAlarmTime(ora_sveglia, minuti_sveglia, secondi_sveglia);
+  
+//  rtc.enableAlarm(rtc.MATCH_HHMMSS);
 
-    ore = ore%24;
-  }
+  DEBUG_PRINT("spegni_tutto() > Setto ora sveglia a ");
+  DEBUG_PRINT(ora_sveglia);
+  DEBUG_PRINT(":");
+  DEBUG_PRINT(minuti_sveglia);
+  DEBUG_PRINT(":");
+  DEBUG_PRINTLN(secondi_sveglia);
 
-//  rtc.setAlarmTime(int(secondi/3600)%24+1, int(secondi/60)%60, secondi%60);
+  DEBUG_PRINT("spegni_tutto() > Ora attuale ");
+  DEBUG_PRINT(rtc.getHours());
+  DEBUG_PRINT(":");
+  DEBUG_PRINT(rtc.getMinutes());
+  DEBUG_PRINT(":");
+  DEBUG_PRINTLN(rtc.getSeconds());
 
-  rtc.setAlarmTime(ore, minuti, secondi);
-  rtc.enableAlarm(rtc.MATCH_HHMMSS);
-
-  Serial.print("Ore:  ");
-  Serial.print(ore);
-  Serial.print("  Minuti:  ");
-  Serial.print(minuti);
-  Serial.print("  Sec:  ");
-  Serial.println(secondi);
-
-  Serial.print("Ore attuale:  ");
-  Serial.print(rtc.getHours());
-  Serial.print("  Minuti attuali:  ");
-  Serial.print(rtc.getMinutes());
-  Serial.print("  Sec attuale:  ");
-  Serial.println(rtc.getSeconds());
-
-  mqtt.publish(FEED_DEBUG, String("Adesso: "+String(rtc.getHours())+":"+String(rtc.getMinutes())+":"+String(rtc.getSeconds())).c_str());
-  mqtt.publish(FEED_DEBUG, String("Sveglia: "+String(ore)+":"+String(minuti)+":"+String(secondi)).c_str());
+//  mqtt.publish(FEED_DEBUG, String("Adesso: "+String(rtc.getHours())+":"+String(rtc.getMinutes())+":"+String(rtc.getSeconds())).c_str());
+//  mqtt.publish(FEED_DEBUG, String("Sveglia: "+String(ore)+":"+String(minuti)+":"+String(secondi)).c_str());
 
   SerialAT.write("AT+CPWROFF");
   scale.power_down();
 
 
-  Serial.println("Sleep mode!!!");
-  rtc.standbyMode();
+  DEBUG_PRINTLN("Sleep!!!");
+//  rtc.standbyMode();
+
+/*
+  long tempo = domani*24*60*60 + (ora_sveglia-rtc.getHours())*60*60 + (minuti_sveglia-rtc.getMinutes())*60 + (secondi_sveglia-rtc.getSeconds());
+
+  if (tempo < 0){
+    domani = 1;
+    tempo = domani*24*60*60 + (ora_sveglia-rtc.getHours())*60*60 + (minuti_sveglia-rtc.getMinutes())*60 + (secondi_sveglia-rtc.getSeconds());
+  }
+
+  arnia_sollevata = false;
+
+  unsigned long inizio_sleep = millis();
+  while (tempo*1000 >= millis() - inizio_sleep){
+    DEBUG_PRINTLN("spegni_tutto() > Aspetto");
+    delay(10000);
+
+    if (arnia_sollevata){
+      allarme();
+    }
+  }
+*/
+
+  rtc.setDate(1, 1, 18);
+  
+  while (rtc.getDay()<giorni+1 || rtc.getHours()<ora_sveglia || rtc.getMinutes()<minuti_sveglia || rtc.getSeconds()<secondi_sveglia){
+    DEBUG_PRINTLN("spegni_tutto() > Aspetto");
+    delay(10000);
+
+    if (arnia_sollevata){
+      allarme();
+    }
+  }
+
+  
+}
 
 
-  pinMode(GSM_DTR, OUTPUT);         // Accendi modulo GPRS
+
+
+void riaccendi_tutto(){  
+  pinMode(GSM_DTR, OUTPUT);                 // Accendi modulo GPRS
   digitalWrite(GSM_DTR, LOW);
   delay(5);
 
@@ -72,5 +116,12 @@ void spegni_tutto(int ore, int minuti, int secondi){
   delay(1000);       
   scale.power_up();
   delay(2000);
-  
+
+  mqtt_init();
+}
+
+
+
+void sollevata(){
+  arnia_sollevata = true;
 }

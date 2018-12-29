@@ -1,42 +1,26 @@
-
 void GPS() {
   
-  String stringa = "     ";
+  String stringa = get_stringa();
   String risultato;
-  String check;
   float latitudine = 0.00;
   float longitudine = 0.00;
-  char c = Serial1.read();
-
-  while (!(stringa[0] == 'G' && stringa[1] == 'N' && stringa[2] == 'G' && stringa[3] == 'G' && stringa[4] == 'A')){
-    stringa = "";
-    while (c != '$'){
-      if (Serial1.available()){
-        c = Serial1.read();
-      }
-    }
-
-      while (c != '*'){
-        if (Serial1.available()){
-          c = Serial1.read();
-          //Serial.print(c);
-          stringa.concat(c);
-        }
-      }
-
-      check = String(Serial1.read()) + String(Serial1.read());
-  }
 
     //Serial.println(stringa);
     
-    if (stringa[0] == 'G' && stringa[1] == 'N' && stringa[2] == 'G' && stringa[3] == 'G' && stringa[4] == 'A' ){    //&& check == checksum(stringa)){
+    if (stringa[0] == 'G' && stringa[1] == 'N' && stringa[2] == 'G' && stringa[3] == 'G' && stringa[4] == 'A' && stato!=6){    //&& check == checksum(stringa)){
       //Serial.println(stringa);
       latitudine = deg_posizione(trova_valore(2, stringa));
       longitudine = deg_posizione(trova_valore(4, stringa));
-      Serial.print("Lat: ");
-      Serial.println(latitudine, 15);
-      Serial.print("Lon: ");
-      Serial.println(longitudine, 15);
+
+      if (trova_valore(3, stringa) == "S"){
+        latitudine = -1*latitudine;
+      }
+      if (trova_valore(5, stringa) == "W"){                                                             // W ???
+        longitudine == -1*longitudine;
+      }
+
+      n_satelliti = trova_valore(7, stringa).toInt();
+      precisione = trova_valore(8, stringa).toInt();                                                    // 1-2 Eccellente, 2-5 Buono, 5-10 Medio, 10-20 Bassa, >20 Molto bassa
     }
 
   latitud = latitudine;
@@ -64,8 +48,7 @@ String trova_valore(int posizione, String stringa){
     risultato = "0";
   }
 
-  Serial.print("Risultato :   ");
-  Serial.println(risultato);
+ 
   return(risultato);
 }
 
@@ -83,75 +66,97 @@ float deg_posizione(String input){
 
 
 void trova_casa(){
-
+  int validi = 0;
   casa_trovata = true;
-  float Min = 180;
-  float MAX = -180;
+  float Min_lat = 180;
+  float MAX_lat = -180;
+  float Min_long = 180;
+  float MAX_long = -180;
   
-  int validi = 0;                                               // Medio più valori per ottenere una latitudine affidabile
 
-  mqtt.publish(FEED_DEBUG, String("Cerco latitudine casa").c_str());
+  mqtt.publish(FEED_DEBUG, String("Cerco posizione casa").c_str());
+
+  DEBUG_PRINTLN("trova_casa()> Raccolgo 20 posizioni GPS per calcolo casa...");
   
-  for(int i=1; i<20; i++){
-    GPS();                                                              // Controllo se la posizione GPS è affidabile
+  for(int i=1; i<20; i++)
+  {
+    // Controllo se la posizione GPS è affidabile
     unsigned long inizio_GPS = millis();
-    while((latitud == 0.0 || longitud == 0.0) && millis()-inizio_GPS < 600000){
+    while((latitud == 0.0 || longitud == 0.0) && millis()-inizio_GPS < 300000 && stato != 6){
       GPS();
     }
-
-    if (millis()-inizio_GPS < 600000){
-      latitudine_casa = latitudine_casa + latitud;
+    if (latitud != 0.0 && longitud != 0.0){
       validi++;
-      if (latitud > MAX){
-        MAX = latitud;
+      latitudine_casa = latitudine_casa + latitud;
+      longitudine_casa = longitudine_casa + longitud;
+      DEBUG_PRINT(validi);
+      DEBUG_PRINT("° posizione trovata su ");
+      DEBUG_PRINT(i);
+      DEBUG_PRINTLN(" tentativi");
+    
+      if (latitud > MAX_lat){
+        MAX_lat = latitud;
       }
-      if (latitud < Min){
-        Min = latitud;
+      if (latitud < Min_lat){
+        Min_lat = latitud;
+      } 
+      if (longitud > MAX_long){
+        MAX_long = longitud;
       }
-    } else {
-      mqtt.publish(FEED_DEBUG, "Errore gps trovare latitudine casa");
+      if (longitud < Min_long){
+        Min_long = longitud;
+      }
     }
   }
+
+  DEBUG_PRINT("trova_casa()> Massimo valore di longitudine recuperato:  ");
+  DEBUG_PRINTLN(MAX_long);
+  DEBUG_PRINT("trova_casa()> Minimo valore di longitudine recuperato:  ");
+  DEBUG_PRINTLN(Min_long);
+  DEBUG_PRINT("trova_casa()> Massimo valore di latitudine recuperato:  ");
+  DEBUG_PRINTLN(MAX_lat);
+  DEBUG_PRINT("trova_casa()> Minimo valore di latitudine recuperato:  ");
+  DEBUG_PRINTLN(Min_lat);
   
-  if (validi != 0 && abs(MAX-Min)<0.005){
-    mqtt.publish(FEED_DEBUG, String("Latitudine casa trovata").c_str());
+  if (abs(MAX_lat-Min_lat)<0.005 && validi >= 5){
     latitudine_casa = latitudine_casa/validi;
+    DEBUG_PRINT("trova_casa()> Latitudine casa trovata:  ");
+    DEBUG_PRINTLN(latitudine_casa);
+    mqtt.publish(FEED_DEBUG, String("Latitudine casa trovata").c_str());  
   } else {
     casa_trovata = false;
+    DEBUG_PRINTLN("Errore gps, latitudine non valida");
     mqtt.publish(FEED_DEBUG, "Errore gps, latitudine non valida");
   }
 
-  validi = 0;                           // Medio più valori per ottenere una longitudine affidabile
-  Min = 180;
-  MAX = -180;
-
-  mqtt.publish(FEED_DEBUG, String("Cerco longitudine casa").c_str());
-  
-  for(int i=1; i<20; i++){
-    GPS();                                                              // Controllo se la posizione GPS è affidabile
-    unsigned long inizio_GPS = millis();
-    while((latitud == 0.0 || longitud == 0.0) && millis()-inizio_GPS < 600000){
-      GPS();
-    }
-
-    if (millis()-inizio_GPS < 600000){
-      longitudine_casa = longitudine_casa + longitud;
-      validi++;
-      if (longitud > MAX){
-        MAX = latitud;
-      }
-      if (longitud < Min){
-        Min = latitud;
-      }
-    } else {
-      mqtt.publish(FEED_DEBUG, "Errore gps trovare longitudine casa");
-    }
-  }
-  if (validi != 0 && abs(MAX-Min)<0.005){
-    mqtt.publish(FEED_DEBUG, String("Longitudine casa trovata").c_str());
+  if (abs(MAX_long-Min_long)<0.005 && validi >= 5){
     longitudine_casa = longitudine_casa/validi;
+    DEBUG_PRINT("trova_casa()> Longitudine casa trovata:  ");
+    DEBUG_PRINTLN(longitudine_casa);
+    mqtt.publish(FEED_DEBUG, String("Longitudine casa trovata").c_str());  
   } else {
     casa_trovata = false;
+    DEBUG_PRINTLN("Errore gps, longitudine non valida");
     mqtt.publish(FEED_DEBUG, "Errore gps, longitudine non valida");
   }
+
 }
+
+void noGps(){
+  unsigned long inizio_MQTT = millis();
+  while(!mqtt.connected() && millis()-inizio_MQTT < 300000){
+    DEBUG_PRINTLN("loop()> chiamo mqttConnect...");
+    mqttConnect();
+
+    if (mqtt.connected()){
+      DEBUG_PRINTLN("loop()> Connessione MQTT riuscita...");
+    } else {
+      DEBUG_PRINTLN("loop()> mqttConnect fallito: ritento...");
+    }
+  }
+  
+  mqtt.publish(FEED_STATO, colore_GPS_staccato);
+  //delay(5000);
+  mqtt.publish(FEED_DEBUG, String("Collegamento con gps danneggiato").c_str());
+  DEBUG_PRINTLN("GPS()> Il collegamento con il gps è danneggiato");
+  }

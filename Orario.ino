@@ -66,21 +66,58 @@ int orario_secondi(String stringa) {
 
 
 String get_stringa(){
-  String stringa = "";
+  String stringa = "     ";
   char c = Serial1.read();
-  while (c != '$'){
-    if (Serial1.available()){
-      c = Serial1.read();
+  while (!(stringa[0] == 'G' && stringa[1] == 'N' && stringa[2] == 'G' && stringa[3] == 'G' && stringa[4] == 'A')){
+    stringa = "";
+    while (c != '$'){
+      if (Serial1.available()){
+        c = Serial1.read();
+        timeInactivity = millis();
+      }
+
+      if (!Serial1.available() && stato < 6 && (millis() - timeInactivity) > maxTimeGpsInactived){
+        stato = 6;
+        noGps();
+      } else if (Serial1.available() && stato == 6) {
+        stato = 1;
+      }
+
+      if (stato == 6){
+        goto uscita_no_GPS;
+      }
     }
+
+    while (c != '*' && stato != 6){
+      if (Serial1.available()){
+        c = Serial1.read();
+        timeInactivity = millis();
+        DEBUG_PRINT(c);
+        stringa.concat(c);
+      }         
+        else if (!Serial1.available() && stato < 6 && (millis() - timeInactivity) > maxTimeGpsInactived){
+        stato = 6;
+        noGps();
+      } else if (Serial1.available() && stato == 6) {
+        stato = 1;
+        
+      }
+    }
+
+    DEBUG_PRINT("GPS()> Stato:");
+    DEBUG_PRINTLN(stato);
+
+    check = String(Serial1.read()) + String(Serial1.read());
+    DEBUG_PRINT("Checksum: ");
+    DEBUG_PRINT(check);
+    DEBUG_PRINT("       Qualità posizione: ");
+    DEBUG_PRINT(precisione);
+    DEBUG_PRINT("       Numero satelliti: ");
+    DEBUG_PRINTLN(n_satelliti);
   }
 
-  while (c != '*'){
-    if (Serial1.available()){
-      c = Serial1.read();
-      //Serial.print(c);
-      stringa.concat(c);
-    }
-  }
+
+  uscita_no_GPS:
 
   /*String check = String(Serial1.read()) + String(Serial1.read());           // Problema con checksum
 

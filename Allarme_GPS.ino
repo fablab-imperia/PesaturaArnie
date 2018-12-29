@@ -1,5 +1,5 @@
-void allarme_GPS(){                                                                                         // Se l'arnia viene spostata...
-  mqtt.publish(FEED_STATO, colore_allarme_gps);
+void allarme(){                                                                                         // Se l'arnia viene spostata...
+  mqtt.publish(FEED_STATO, colore_allarme);
   int controllo = 120;
   bool spostata = true;
   while(spostata){
@@ -20,12 +20,13 @@ void allarme_GPS(){                                                             
         controllo--;                                                                                        // controllo alre 2-1 volte
       } else {
         controllo = 120;                                                                                      // altrimenti continuo
-        delay(60000);
+        delay(40000);
       }
     }
+
+    delay(20000);
 
     if (controllo == 0){spostata = false;}                                                        // Se per 120 volte consecutive la posizione è quella iniziale ritorno nel loop
 
   }
 }
-

@@ -67,7 +67,7 @@ void mqtt_init(){
   DEBUG_PRINT(" con utente ");
   DEBUG_PRINT(user);
   DEBUG_PRINT(" e pwd ");
-  DEBUG_PRINT(user); 
+  DEBUG_PRINTLN(user); 
 
   if (!modem.gprsConnect(apn, user, pass)) {
     DEBUG_PRINTLN("mqtt_init()> ERRORE fallita connessione APN GPRS");
