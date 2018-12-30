@@ -1,20 +1,24 @@
 
 boolean mqttConnect() {
-  SerialMon.print("Connecting to ");
-  SerialMon.print(broker);
+  unsigned long inizio_MQTT = millis();
+  while(!mqtt.connected() && millis()-inizio_MQTT < timeOutMQTT){
+    DEBUG_PRINT("Connecting to ");
+    DEBUG_PRINT(broker);
 
   // Connect to MQTT Broker
   //boolean status = mqtt.connect("GsmClientTest");
 
   // Or, if you want to authenticate MQTT:
   //boolean status = mqtt.connect("GsmClientName", "mqtt_user", "mqtt_pass");
-  bool status = mqtt.connect("Mqtt_client", ADAFRUIT_USERNAME, AIO_KEY);
+    bool status = mqtt.connect("Mqtt_client", ADAFRUIT_USERNAME, AIO_KEY);
 
-  if (status == false) {
-    SerialMon.println(" fail");
-    return false;
+    if (status == false) {
+      DEBUG_PRINTLN(" fail");
+//      return false;
+    }
+    DEBUG_PRINTLN(" OK");
+//    return mqtt.connected();
   }
-  SerialMon.println(" OK");
   return mqtt.connected();
 }
 
@@ -33,7 +37,8 @@ void mqtt_init(){
   Serial.begin(115200);
   delay(10);
 
-  SerialAT.begin(115200);
+//  SerialAT.begin(115200);
+  SerialAT.begin(9600);
   delay(3000);
   
   DEBUG_PRINTLN("mqtt_init()> Inizializzo Modem");
