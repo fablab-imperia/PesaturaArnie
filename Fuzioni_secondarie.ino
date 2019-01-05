@@ -16,8 +16,8 @@ void spegni_tutto(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia, i
   DEBUG_PRINT(":");
   DEBUG_PRINTLN(rtc.getSeconds());
 
-  //  mqtt.publish(FEED_DEBUG, String("Adesso: "+String(rtc.getHours())+":"+String(rtc.getMinutes())+":"+String(rtc.getSeconds())).c_str());
-  //  mqtt.publish(FEED_DEBUG, String("Sveglia: "+String(ore)+":"+String(minuti)+":"+String(secondi)).c_str());
+  //  Pubblica(FEED_DEBUG, String("Adesso: "+String(rtc.getHours())+":"+String(rtc.getMinutes())+":"+String(rtc.getSeconds())).c_str());
+  //  Pubblica(FEED_DEBUG, String("Sveglia: "+String(ore)+":"+String(minuti)+":"+String(secondi)).c_str());
 
   SerialAT.write("AT+CPWROFF");
   scale.power_down();
@@ -71,7 +71,7 @@ void trova_casa(){
   float MAX_long = -180;
   
   mqttConnect();
-  mqtt.publish(FEED_DEBUG, String("Cerco posizione casa").c_str());
+  Pubblica(FEED_DEBUG, String("Cerco posizione casa").c_str());
 
   DEBUG_PRINTLN("trova_casa()> Raccolgo 10 posizioni GPS per calcolo casa...");
 
@@ -121,11 +121,11 @@ void trova_casa(){
       DEBUG_PRINTLN(latitudine_casa);
       DEBUG_PRINT("trova_casa()> Longitudine casa trovata:  ");
       DEBUG_PRINTLN(longitudine_casa);
-      mqtt.publish(FEED_DEBUG, String("Posizione casa trovata").c_str());  
+      Pubblica(FEED_DEBUG, String("Posizione casa trovata").c_str());  
     } else {
       casa_trovata = false;
       DEBUG_PRINTLN("Errore gps, posizione non valida");
-      mqtt.publish(FEED_DEBUG, "Errore gps, posizione non valida");
+      Pubblica(FEED_DEBUG, "Errore gps, posizione non valida");
     }
   }
 }
@@ -134,21 +134,21 @@ void trova_casa(){
 void allarme(){                                                                                             // Se l'arnia viene spostata...
 /*  unsigned long inizio_MQTT = millis();
   while(!mqtt.connected() && millis()-inizio_MQTT < timeOutMQTT){                                           // Se non sono connesso al boroker
-    DEBUG_PRINTLN("allarme()> chiamo mqttConnect...");*/
+    DEBUG_PRINTLN("allarme()> chiamo mqttConnect...");
     mqttConnect();                                                                                          // mi connetto
-//  }
+  }*/
   
-  mqtt.publish(FEED_STATO, colore_allarme);
-  mqtt.publish(FEED_DEBUG, "Allarme GPS");
+  Pubblica(FEED_STATO, colore_allarme);
+  Pubblica(FEED_DEBUG, "Allarme GPS");
   DEBUG_PRINT("allarme() > L'arnia è stata mossa!");
 
   int controllo = 120;
   while(controllo > 0){
     check_GPS();                                                                                            // Controllo se la posizione GPS è affidabile
-    mqttConnect();                                                                                        // mi connetto
+//    mqttConnect();                                                                                        // mi connetto
     if (latitud != 0 || longitud != 0){                                                                     // Se è affidabile la pubblico
-      mqtt.publish(FEED_POSIZIONE, String(String(progressivo)+","+String(latitud, 8)+","+String(longitud, 8)+","+String(altitudine, 1)).c_str());
-      if(abs(latitudine_casa-latitud)<tolleranza_GPS && abs(longitudine_casa-longitud)<tolleranza_GPS){                       // Se l'arnia è a posto
+      Pubblica(FEED_POSIZIONE, String(String(progressivo)+","+String(latitud, 8)+","+String(longitud, 8)+","+String(altitudine, 1)).c_str());
+      if(abs(latitudine_casa-latitud)<tolleranza_GPS && abs(longitudine_casa-longitud)<tolleranza_GPS){     // Se l'arnia è a posto
         controllo--;                                                                                        // controllo altre volte
       } else {
         controllo = 120;                                                                                    // altrimenti continuo
@@ -158,30 +158,30 @@ void allarme(){                                                                 
     delay(60000);
   }
 
-  mqttConnect();
+//  mqttConnect();
   switch (stato){
     case 1:
-      DEBUG_PRINT("allarme()> Pubblico su FEED_STATO valore ");
-      DEBUG_PRINTLN(colore_ok);
-      mqtt.publish(FEED_STATO, colore_ok);
+//      DEBUG_PRINT("allarme()> Pubblico su FEED_STATO valore ");
+//      DEBUG_PRINTLN(colore_ok);
+      Pubblica(FEED_STATO, colore_ok);
       break;
 
     case 2:
-      DEBUG_PRINT("allarme()> Pubblico su FEED_STATO valore ");
-      DEBUG_PRINTLN(colore_ora_errata);
-      mqtt.publish(FEED_STATO, colore_ora_errata);
+//      DEBUG_PRINT("allarme()> Pubblico su FEED_STATO valore ");
+//      DEBUG_PRINTLN(colore_ora_errata);
+      Pubblica(FEED_STATO, colore_ora_errata);
       break;
 
     case 3:
-      DEBUG_PRINT("allarme()> Pubblico su FEED_STATO valore ");
-      DEBUG_PRINTLN(colore_problema_peso);
-      mqtt.publish(FEED_STATO, colore_problema_peso);
+//      DEBUG_PRINT("allarme()> Pubblico su FEED_STATO valore ");
+//      DEBUG_PRINTLN(colore_problema_peso);
+      Pubblica(FEED_STATO, colore_problema_peso);
       break;
 
     case 4:
-      DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
-      DEBUG_PRINTLN(colore_batteria_bassa);
-      mqtt.publish(FEED_STATO, colore_batteria_bassa);
+//      DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
+//      DEBUG_PRINTLN(colore_batteria_bassa);
+      Pubblica(FEED_STATO, colore_batteria_bassa);
       break;
   }
 
@@ -194,17 +194,17 @@ void orario_SET_RTC() {
   if (fix_Loc_error){                        // Se i dati gps non sono validi imposto orario tramite server NTP
     //rtc.setTime(byte(ore_NTP), byte(minuti_NTP), byte(secondi_NTP));            //gia aggiornato non occorre
     DEBUG_PRINTLN("setup()> RTC aggiornato tramite NTP UTC");
-    mqtt.publish(FEED_DEBUG, String("Ora impostata tramite NTP UTC: "+String(ore_NTP)+" h, "+String(minuti_NTP)+" m").c_str());
+    Pubblica(FEED_DEBUG, String("Ora impostata tramite NTP UTC: "+String(ore_NTP)+" h, "+String(minuti_NTP)+" m").c_str());
 
     if (stato <= 2){
       stato = 2;
-      mqtt.publish(FEED_STATO, colore_ora_errata);
+      Pubblica(FEED_STATO, colore_ora_errata);
       DEBUG_PRINT("setup()> Pubblico su FEED_STATO valore ");
       DEBUG_PRINTLN(colore_ora_errata);
     }
   } else  {
     rtc.setTime(byte(ore), byte(minuti), byte(secondi));        // Se i dati sono validi imposto l' ora
     rtc.setDate(1, 1, 18);
-    mqtt.publish(FEED_DEBUG, String("Ora impostata tramite GPS: "+String(ore)+" h, "+String(minuti)+" m").c_str());
+    Pubblica(FEED_DEBUG, String("Ora impostata tramite GPS: "+String(ore)+" h, "+String(minuti)+" m").c_str());
   }
 }

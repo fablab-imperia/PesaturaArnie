@@ -22,3 +22,21 @@ boolean mqttConnect() {
   }
   return mqtt.connected();
 }
+
+bool Pubblica(String topic, String messaggio){
+  DEBUG_PRINT("Pubblica() > Pubblico:    \"" + messaggio + "\"      su:   \"" + topic + "\"");
+  bool riuscita = false;
+  for(int i=0; i<3 && !riuscita; i++){
+    if (!mqtt.connected()){
+      riuscita = mqttConnect();
+    }
+    riuscita = mqtt.publish(topic.c_str(), messaggio.c_str());
+    DEBUG_PRINT(".");
+  }
+  if (riuscita){
+    DEBUG_PRINTLN(" INVIO RIUSCITO!");
+  } else {
+    DEBUG_PRINTLN(" INVIO FALLITO!");
+  }
+  return riuscita;
+}

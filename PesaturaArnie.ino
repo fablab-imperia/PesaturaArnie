@@ -59,8 +59,9 @@ int stato;                                                      // 0 - Setup, 1 
 
 //GPS e pertinenti
 #define MIN_SAT_CHECK 5                                         // Numero minimo satelliti
-#define maxTimeGpsInactived 10000                              // Tempo massimo di inattivita del GPS prima dell' invio dell allarme per GPS danneggiato-----------------
+#define maxTimeGpsInactived 60000                               // Tempo massimo di inattivita del GPS prima dell' invio dell allarme per GPS danneggiato-----------------
 #define timeOutMQTT 300000                                      // Tempo massimo connessione MQTT
+#define timeOutGPRS 300000                                      // Tempo massimo connessione rete cellulare
 #define tolleranza_GPS 0.005                                    // Tolleranza di errore accettabile (in gradi) prima di chiamare allarme()
 int ore;                                                        //
 int minuti;                                                     // orario GPS
@@ -75,10 +76,10 @@ gps_fix  fix; // This holds on to the latest values
 #define pin_interrupt 0                                         // Pin per interrupt per il risveglio
 #define pin_GPS 1                                               // Pin alimentazione GPS
 #define pin_buzzer 2                                            // buzzer avviso tara eseguita
-#define pin_reset_interrupt 3                                    // pin reset interrupt
+#define pin_reset_interrupt 3                                   // pin reset interrupt
 
 //Bilancia
-#define peso_basso -10                                           // Peso minimo (in kg) considerato rischioso
+#define peso_basso -10                                          // Peso minimo (in kg) considerato rischioso
 #define peso_alto 80                                            // Peso massimo (in kg) considerato rischioso
 
 
@@ -123,7 +124,7 @@ double longitud;
 float altitudine;
 unsigned long timeInactivity;                                   // Tempo di vita del GPS
 int satelliti;                                                  // Numero satelliti utilizzati
-unsigned int progressivo = 0;
+unsigned int progressivo = 0;                                   // Progressivo ricerche GPS
 
 volatile bool arnia_sollevata = false;
 
@@ -142,6 +143,9 @@ PubSubClient mqtt(broker, 1883, client);
 
 
 void setup() {
+
+  delay(10000);
+  
   DEBUG_PORT.begin(9600);
   delay(2000);
   /*while (!Serial){
@@ -186,14 +190,14 @@ void setup() {
 
   //mqtt_init();                                                  // Connetto alla rete GPRS e al broker mqtt
   init_GSM();
-  mqttConnect();
+//  mqttConnect();
   
   
   DEBUG_PRINTLN("setup()> Effettuo la tara della Bilancia");                                                       
   scale.set_scale(-18200);                                      // Calibro la scala (vedere il file README della libreria HX711) 
   scale.tare();                                                  // Taro la scala
   DEBUG_PRINTLN("setup()> Completato taratura  bilancia");
-  mqtt.publish(FEED_DEBUG, "SETUP: Tara bilancia effettuata sistemare l'ARNIA!!");
+  Pubblica(FEED_DEBUG, "SETUP: Tara bilancia effettuata sistemare l'ARNIA!!");
   digitalWrite(pin_buzzer, HIGH);
   delay(300);
   digitalWrite(pin_buzzer, LOW);
@@ -211,22 +215,24 @@ void setup() {
   delay(1000);
   
   stato = 0;
-  mqtt.publish(FEED_STATO, colore_setup);
-  mqtt.publish(FEED_DEBUG, "SETUP: Accensione!");
+  Pubblica(FEED_STATO, colore_setup);
+  Pubblica(FEED_DEBUG, "SETUP: Accensione!");
   DEBUG_PRINT("setup()> Pubblico su FEED_STATO valore: ");
   DEBUG_PRINTLN(colore_setup);
   
   delay(1000);  
-  
+
   trova_casa();
 }
 
 void loop() {
   
-  DEBUG_PRINTLN("loop()> Controllo se la casa e' stata trovata...");
+  DEBUG_PRINT("loop()> Controllo se la casa e' stata trovata...  ");
   if (!casa_trovata){
-    DEBUG_PRINTLN("loop()> Casa non trovata... riprovo...");
+    DEBUG_PRINTLN("No... riprovo...");
     trova_casa();
+  } else {
+    DEBUG_PRINTLN("Sì!");
   }
 
   delay(2000);
@@ -255,10 +261,10 @@ void loop() {
   
 
   DEBUG_PRINTLN("loop()> Pubblico i FEED peso e batteria");
-  mqtt.publish(FEED_DEBUG, "Inizio Loop");
-  mqtt.publish(FEED_PESO, String(peso).c_str());                // Pubblico il peso
-  mqtt.publish(FEED_BATTERIA, String(batteria).c_str());        // Pubblico lo stato della batteria in percentuale
-  mqtt.publish(FEED_DEBUG, ("Batt: "+String(batteria)+">"+String(tens)+"V %   Peso: "+String(peso)+" kg").c_str());
+  Pubblica(FEED_DEBUG, "Inizio Loop");
+  Pubblica(FEED_PESO, String(peso));                          // Pubblico il peso
+  Pubblica(FEED_BATTERIA, String(batteria));                 // Pubblico lo stato della batteria in percentuale
+  Pubblica(FEED_DEBUG, ("Batt: "+String(batteria)+">"+String(tens)+"V %   Peso: "+String(peso)+" kg"));
 
   
   if (batteria < 30){
@@ -267,15 +273,15 @@ void loop() {
     DEBUG_PRINTLN(" % (< 30%)!");
     if(stato < 4){
       stato = 4;
-      DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
-      DEBUG_PRINTLN(colore_batteria_bassa);
-      mqtt.publish(FEED_STATO, colore_batteria_bassa);
+//      DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
+//      DEBUG_PRINTLN(colore_batteria_bassa);
+      Pubblica(FEED_STATO, colore_batteria_bassa);
     }
   } else if (stato == 4){
     stato = 1;
-    DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
-    DEBUG_PRINTLN(colore_ok);
-    mqtt.publish(FEED_STATO, colore_ok);
+//    DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
+//    DEBUG_PRINTLN(colore_ok);
+    Pubblica(FEED_STATO, colore_ok);
   }
 
   if (peso < peso_basso || peso > peso_alto){
@@ -287,25 +293,25 @@ void loop() {
 
     if (stato < 3){
       stato = 3;
-      DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
-      DEBUG_PRINTLN(colore_problema_peso);
-      mqtt.publish(FEED_STATO, colore_problema_peso);
+//      DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
+//      DEBUG_PRINTLN(colore_problema_peso);
+      Pubblica(FEED_STATO, colore_problema_peso);
     }
   } else if (stato == 3) {
     stato = 1;
-    DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
-    DEBUG_PRINTLN(colore_ok);
-    mqtt.publish(FEED_STATO, colore_ok);
+//    DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
+//    DEBUG_PRINTLN(colore_ok);
+    Pubblica(FEED_STATO, colore_ok);
   }
 
 
-  //check_GPS();
+  check_GPS();
   if (latitud != 0.0 || longitud != 0.0){                               // Se la posizione è affidabile la pubblico
     DEBUG_PRINTLN("loop()> La posizione GPS recuperata e' affidabile... ");
-    mqttConnect();
-    DEBUG_PRINT("loop()> Pubblico su FEED_POSIZIONE valore ");
-    DEBUG_PRINTLN(String(String(progressivo)+","+String(latitud, 15)+","+String(longitud, 15)+","+String(altitudine, 1)).c_str());
-    mqtt.publish(FEED_POSIZIONE, String(String(progressivo)+","+String(latitud, 15)+","+String(longitud, 15)+","+String(altitudine, 1)).c_str());
+//    mqttConnect();
+//    DEBUG_PRINT("loop()> Pubblico su FEED_POSIZIONE valore ");
+//    DEBUG_PRINTLN(String(String(progressivo)+","+String(latitud, 15)+","+String(longitud, 15)+","+String(altitudine, 1)).c_str());
+    Pubblica(FEED_POSIZIONE, String(String(progressivo)+","+String(latitud, 15)+","+String(longitud, 15)+","+String(altitudine, 1)).c_str());
 
     if (((abs(latitudine_casa-latitud)>tolleranza_GPS || abs(longitudine_casa-longitud)>tolleranza_GPS) && casa_trovata) && !fix_Loc_error) {
       DEBUG_PRINTLN("loop()> ALLARME GPS!");
@@ -319,23 +325,23 @@ void loop() {
   if (ore == 99 && minuti == 99 && secondi == 99){                        // Se i dati non sono validi imposto un'ora a caso che verrà corretta in seguito
     rtc.setTime(byte(1), byte(0), byte(0));
     DEBUG_PRINTLN("setup()> Errore impostazione ora su RTC...");
-    mqtt.publish(FEED_DEBUG, "Errore impostazione ora");
+    Pubblica(FEED_DEBUG, "Errore impostazione ora");
 
     if (stato < 2){
       stato = 2;
-      mqtt.publish(FEED_STATO, colore_ora_errata);
+      Pubblica(FEED_STATO, colore_ora_errata);
       DEBUG_PRINT("setup()> Pubblico su FEED_STATO valore ");
       DEBUG_PRINTLN(colore_ora_errata);
     }
   } else {
     rtc.setTime(byte(ore), byte(minuti), byte(secondi));                  // Se i dati sono validi imposto l' ora
-    mqtt.publish(FEED_DEBUG, String("Ora: "+String(ore)+" h, "+String(minuti)+" m").c_str());
+    Pubblica(FEED_DEBUG, String("Ora: "+String(ore)+" h, "+String(minuti)+" m").c_str());
 
     if (stato == 2){
       stato = 1;
       DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
       DEBUG_PRINTLN(colore_ok);
-      mqtt.publish(FEED_STATO, colore_ok);
+      Pubblica(FEED_STATO, colore_ok);
     }
   }*/
 
@@ -343,7 +349,7 @@ void loop() {
   if (stato == 1){
     DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
     DEBUG_PRINTLN(colore_ok);
-    mqtt.publish(FEED_STATO, colore_ok);
+    Pubblica(FEED_STATO, colore_ok);
   }
 */
 
