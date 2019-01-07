@@ -24,6 +24,7 @@ void init_GSM (){
   unsigned long inizioGPRS = millis();
   while(notConnected && millis()-inizioGPRS < timeOutGPRS){
     if (gsmAccess.begin(pin_card, true, true) == GSM_READY) {
+      DEBUG_PRINT("gsmAccess.begin passato!   ");
       if (gprs.attachGPRS(apn, user, pass) == GPRS_READY){
         notConnected = false;
         DEBUG_PRINTLN("!!!!!!!!!!Connesso!!!!!!!!!!!");

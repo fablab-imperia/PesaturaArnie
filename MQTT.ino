@@ -23,20 +23,28 @@ boolean mqttConnect() {
   return mqtt.connected();
 }
 
+
 bool Pubblica(String topic, String messaggio){
-  DEBUG_PRINT("Pubblica() > Pubblico:    \"" + messaggio + "\"      su:   \"" + topic + "\"");
+  DEBUG_PRINTLN("Pubblica() > Pubblico:    \"" + messaggio + "\"      su:   \"" + topic + "\"");
   bool riuscita = false;
   for(int i=0; i<3 && !riuscita; i++){
     if (!mqtt.connected()){
+      DEBUG_PRINTLN("Pubblica() > ||||||||||Modem Disconnesso Riconetto!!!!!!!!!");
+      init_GSM();
       riuscita = mqttConnect();
     }
     riuscita = mqtt.publish(topic.c_str(), messaggio.c_str());
-    DEBUG_PRINT(".");
+    DEBUG_PRINT("Pubblica() > " + String(i+1) + "° tentativo completato: ");
+    if (riuscita){
+      DEBUG_PRINTLN("RIUSCITO!");
+    } else {
+      DEBUG_PRINTLN("FALLITO!");
+    }
   }
   if (riuscita){
-    DEBUG_PRINTLN(" INVIO RIUSCITO!");
+    DEBUG_PRINTLN("Pubblica() > !!!!!!!!!!! INVIO RIUSCITO !!!!!!!!!!!");
   } else {
-    DEBUG_PRINTLN(" INVIO FALLITO!");
+    DEBUG_PRINTLN("Pubblica() > !!!!!!!!!!! INVIO FALLITO !!!!!!!!!!!");
   }
   return riuscita;
 }

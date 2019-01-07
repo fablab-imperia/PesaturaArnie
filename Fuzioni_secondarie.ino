@@ -16,6 +16,8 @@ void spegni_tutto(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia, i
   DEBUG_PRINT(":");
   DEBUG_PRINTLN(rtc.getSeconds());
 
+  rtc.setDate(1, 1, 18);
+
   //  Pubblica(FEED_DEBUG, String("Adesso: "+String(rtc.getHours())+":"+String(rtc.getMinutes())+":"+String(rtc.getSeconds())).c_str());
   //  Pubblica(FEED_DEBUG, String("Sveglia: "+String(ore)+":"+String(minuti)+":"+String(secondi)).c_str());
 
@@ -25,14 +27,14 @@ void spegni_tutto(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia, i
   DEBUG_PRINTLN("Sleep!!!");
   gsmAccess.lowPowerMode();
      
-  int sveglia = 0;
-  //while (rtc.getDay()<giorni+1 || rtc.getHours()<ora_sveglia || rtc.getMinutes()<minuti_sveglia || rtc.getSeconds()<secondi_sveglia){
-  while (sveglia < 6) {
+//  int sveglia = 0;
+  while (rtc.getDay()<giorni+1 || rtc.getHours()<ora_sveglia || rtc.getMinutes()<minuti_sveglia || rtc.getSeconds()<secondi_sveglia){
+//  while (sveglia < 6) {
     DEBUG_PRINT("spegni_tutto() > Aspetto: ");
-    DEBUG_PRINT(6 - sveglia);
-    DEBUG_PRINTLN(" secondi.");
-    delay(1000);
-    sveglia ++;
+//    DEBUG_PRINT(6 - sveglia);
+//    DEBUG_PRINTLN(" secondi.");
+    delay(10000);
+//    sveglia ++;
 
     if (arnia_sollevata){
       riaccendi_tutto();
@@ -62,7 +64,7 @@ void riaccendi_tutto(){
 
 
 void trova_casa(){
-  check_GPS();
+  //|check_GPS();
   int validi = 0;
   casa_trovata = true;
   float Min_lat = 180;
@@ -70,8 +72,8 @@ void trova_casa(){
   float Min_long = 180;
   float MAX_long = -180;
   
-  mqttConnect();
-  Pubblica(FEED_DEBUG, String("Cerco posizione casa").c_str());
+//  mqttConnect();
+  Pubblica(FEED_DEBUG, "Cerco posizione casa");
 
   DEBUG_PRINTLN("trova_casa()> Raccolgo 10 posizioni GPS per calcolo casa...");
 
@@ -112,21 +114,22 @@ void trova_casa(){
     DEBUG_PRINTLN(MAX_lat);
     DEBUG_PRINT("trova_casa()> Minimo valore di latitudine recuperato:  ");
     DEBUG_PRINTLN(Min_lat);
+
+  }
   
    
-    if (abs(MAX_long-Min_long)<tolleranza_GPS && abs(MAX_lat-Min_lat)<tolleranza_GPS && validi >= 5){
-      latitudine_casa = latitudine_casa/validi;
-      longitudine_casa = longitudine_casa/validi;
-      DEBUG_PRINT("trova_casa()> Latitudine casa trovata:  ");
-      DEBUG_PRINTLN(latitudine_casa);
-      DEBUG_PRINT("trova_casa()> Longitudine casa trovata:  ");
-      DEBUG_PRINTLN(longitudine_casa);
-      Pubblica(FEED_DEBUG, String("Posizione casa trovata").c_str());  
-    } else {
-      casa_trovata = false;
-      DEBUG_PRINTLN("Errore gps, posizione non valida");
-      Pubblica(FEED_DEBUG, "Errore gps, posizione non valida");
-    }
+  if (abs(MAX_long-Min_long)<tolleranza_GPS && abs(MAX_lat-Min_lat)<tolleranza_GPS && validi >= 5 && !fix_Loc_error){
+    latitudine_casa = latitudine_casa/validi;
+    longitudine_casa = longitudine_casa/validi;
+    DEBUG_PRINT("trova_casa()> Latitudine casa trovata:  ");
+    DEBUG_PRINTLN(latitudine_casa);
+    DEBUG_PRINT("trova_casa()> Longitudine casa trovata:  ");
+    DEBUG_PRINTLN(longitudine_casa);
+    Pubblica(FEED_DEBUG, String("Posizione casa trovata").c_str());  
+  } else {
+    casa_trovata = false;
+    DEBUG_PRINTLN("Errore gps, posizione non valida");
+    Pubblica(FEED_DEBUG, "Errore gps, posizione non valida");
   }
 }
 
@@ -190,7 +193,7 @@ void allarme(){                                                                 
 
 
 void orario_SET_RTC() {
-  mqttConnect();
+//  mqttConnect();
   if (fix_Loc_error){                        // Se i dati gps non sono validi imposto orario tramite server NTP
     //rtc.setTime(byte(ore_NTP), byte(minuti_NTP), byte(secondi_NTP));            //gia aggiornato non occorre
     DEBUG_PRINTLN("setup()> RTC aggiornato tramite NTP UTC");
@@ -199,12 +202,49 @@ void orario_SET_RTC() {
     if (stato <= 2){
       stato = 2;
       Pubblica(FEED_STATO, colore_ora_errata);
-      DEBUG_PRINT("setup()> Pubblico su FEED_STATO valore ");
-      DEBUG_PRINTLN(colore_ora_errata);
+//      DEBUG_PRINT("setup()> Pubblico su FEED_STATO valore ");
+//      DEBUG_PRINTLN(colore_ora_errata);
     }
   } else  {
     rtc.setTime(byte(ore), byte(minuti), byte(secondi));        // Se i dati sono validi imposto l' ora
     rtc.setDate(1, 1, 18);
     Pubblica(FEED_DEBUG, String("Ora impostata tramite GPS: "+String(ore)+" h, "+String(minuti)+" m").c_str());
   }
+}
+
+bool log_debug(String LOG, bool nl){
+  if (nl){
+    Serial.println(LOG);
+  } else {
+    Serial.print(LOG);
+  }
+  
+  File file;
+  file = SD.open("log.txt", FILE_WRITE); //File in scrittura
+  if (file) //Se il file è stato aperto correttamente
+  {
+    file.println(String(rtc.getHours())+':'+String(rtc.getMinutes())+':'+String(rtc.getSeconds())+"  -->  "+LOG); //Scrivo su file il numero
+    
+    file.close(); //Chiusura file
+
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool log_debug(int LOG, bool nl){
+  return log_debug(String(LOG), nl);
+}
+
+bool log_debug(float LOG, bool nl){
+  return log_debug(String(LOG), nl);
+}
+
+bool log_debug(double LOG, bool nl){
+  return log_debug(String(LOG), nl);
+}
+
+bool log_debug(long LOG, bool nl){
+  return log_debug(String(LOG), nl);
 }

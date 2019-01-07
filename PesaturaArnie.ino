@@ -16,16 +16,35 @@ A1 --> DD
 #include <RTCZero.h>                                            // Par gestire l'RTC interno
 #include <PubSubClient.h>                                       // Per pubblicare messaggi via MQTT
 #include <NMEAGPS.h>                                            // Per il GPS
+
+#include <SPI.h>
+#include <SD.h>
+
+
 #define gpsPort Serial1
 
 
 
-
+/*
 //Stampiamo usando debug print per accendere e spegnere le stampe all'occorenza
 #ifdef DEBUG
  #define DEBUG_PRINT(x)             Serial.print (x)
  #define DEBUG_PRINTDEC(x)          Serial.print (x, DEC)
  #define DEBUG_PRINTLN(x)           Serial.println (x)
+ #define DEBUG_PRINT_MOBILE(x, y)   Serial.print (x, y)
+ #define DEBUG_PRINTLN_MOBILE(x, y) Serial.println (x, y)
+#else
+ #define DEBUG_PRINT(x)
+ #define DEBUG_PRINTDEC(x)
+ #define DEBUG_PRINTLN(x)
+ #define DEBUG_PRINT_MOBILE(x, y)
+ #define DEBUG_PRINTLN_MOBILE(x, y)
+#endif*/
+
+#ifdef DEBUG
+ #define DEBUG_PRINT(x)             log_debug(x, false)
+// #define DEBUG_PRINTDEC(x)          Serial.print (x, DEC)
+ #define DEBUG_PRINTLN(x)           log_debug(x, true)
  #define DEBUG_PRINT_MOBILE(x, y)   Serial.print (x, y)
  #define DEBUG_PRINTLN_MOBILE(x, y) Serial.println (x, y)
 #else
@@ -171,7 +190,17 @@ void setup() {
   //DEBUG_PRINTLN("Init()> OK UDP Connection");
   //long int orario_NEW = gsmAccess.getTime();
   //DEBUG_PRINTLN(orario_NEW);
-  
+
+  delay(4000);
+  Serial.print("Inizializzazione Card: ");
+  if (!SD.begin(4)) //il Pin 4 è collegato a CS
+  {
+    Serial.println("FALLITA!");
+  } else {
+    Serial.println("ESEGUITO!");
+  }
+
+
   DEBUG_PRINTLN("Init()> Inizializzo i dispositivi");
   rtc.begin();                                                    // Inizializzo l' RTC interno
   gpsPort.begin(9600);
@@ -189,9 +218,10 @@ void setup() {
   DEBUG_PRINTLN("setup()> MQTT Init...");
 
   //mqtt_init();                                                  // Connetto alla rete GPRS e al broker mqtt
-  init_GSM();
-//  mqttConnect();
+  //init_GSM();
+  //mqttConnect();
   
+  Pubblica(FEED_DEBUG, "SD: "+String(log_debug("Test SD...", true)));
   
   DEBUG_PRINTLN("setup()> Effettuo la tara della Bilancia");                                                       
   scale.set_scale(-18200);                                      // Calibro la scala (vedere il file README della libreria HX711) 
@@ -217,16 +247,16 @@ void setup() {
   stato = 0;
   Pubblica(FEED_STATO, colore_setup);
   Pubblica(FEED_DEBUG, "SETUP: Accensione!");
-  DEBUG_PRINT("setup()> Pubblico su FEED_STATO valore: ");
-  DEBUG_PRINTLN(colore_setup);
+//  DEBUG_PRINT("setup()> Pubblico su FEED_STATO valore: ");
+//  DEBUG_PRINTLN(colore_setup);
   
   delay(1000);  
-
+  check_GPS();
   trova_casa();
 }
 
 void loop() {
-  
+  check_GPS();
   DEBUG_PRINT("loop()> Controllo se la casa e' stata trovata...  ");
   if (!casa_trovata){
     DEBUG_PRINTLN("No... riprovo...");
@@ -241,7 +271,7 @@ void loop() {
   float batteria = livello_batteria();
 
   DEBUG_PRINT("loop()> Valore peso letto da bilancia: ");
-  DEBUG_PRINTLN(peso);
+  DEBUG_PRINTLN(String(peso));
   DEBUG_PRINT("loop()> Valore livello batteria letto: ");
   DEBUG_PRINT(batteria);
   DEBUG_PRINT("....>.... in volt");
@@ -305,13 +335,13 @@ void loop() {
   }
 
 
-  check_GPS();
+  //|check_GPS();
   if (latitud != 0.0 || longitud != 0.0){                               // Se la posizione è affidabile la pubblico
     DEBUG_PRINTLN("loop()> La posizione GPS recuperata e' affidabile... ");
 //    mqttConnect();
 //    DEBUG_PRINT("loop()> Pubblico su FEED_POSIZIONE valore ");
 //    DEBUG_PRINTLN(String(String(progressivo)+","+String(latitud, 15)+","+String(longitud, 15)+","+String(altitudine, 1)).c_str());
-    Pubblica(FEED_POSIZIONE, String(String(progressivo)+","+String(latitud, 15)+","+String(longitud, 15)+","+String(altitudine, 1)).c_str());
+    Pubblica(FEED_POSIZIONE, String(progressivo)+","+String(latitud, 15)+","+String(longitud, 15)+","+String(altitudine, 1));
 
     if (((abs(latitudine_casa-latitud)>tolleranza_GPS || abs(longitudine_casa-longitud)>tolleranza_GPS) && casa_trovata) && !fix_Loc_error) {
       DEBUG_PRINTLN("loop()> ALLARME GPS!");
@@ -356,7 +386,7 @@ void loop() {
   DEBUG_PRINTLN("loop()> Chiamo spegni tutto e avvio standby... ");
   #ifdef DEBUG
     if (rtc.getHours() == 23 && rtc.getMinutes() >= 58)
-    {spegni_tutto(0, 1, byte(30), 0);}                                        // Sleep mode per 1 minuto
+    {spegni_tutto(0, 1, byte(30), 0);}                                                      // Sleep mode per 1 minuto
     else if (rtc.getMinutes() >= 58)
     {spegni_tutto(rtc.getHours()+1, 1, byte(30), 0);}                                        // Sleep mode per 1 minuto
     else {spegni_tutto(rtc.getHours(), rtc.getMinutes() + 1, byte(30), 0);}

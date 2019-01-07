@@ -6,9 +6,9 @@ void check_GPS()
   while ((!gps.available(gpsPort) || !fix_Loc)) {
     if (millis()-tempoAttivita > maxTimeGpsInactived){
       if (stato != 6) {
-        mqttConnect();
-        DEBUG_PRINT("\nloop()> Pubblico su FEED_STATO valore ");
-        DEBUG_PRINTLN(colore_GPS_staccato);
+//        mqttConnect();
+//        DEBUG_PRINT("\nloop()> Pubblico su FEED_STATO valore ");
+//        DEBUG_PRINTLN(colore_GPS_staccato);
         Pubblica(FEED_STATO, colore_GPS_staccato);
         Pubblica(FEED_DEBUG, String("GPS danneggiato").c_str());
         Pubblica(FEED_DEBUG, String("Cerco una posizione usando la cella GSM").c_str());
@@ -27,7 +27,7 @@ void check_GPS()
         break;
       }
       else if (stato == 6) {
-        DEBUG_PRINTLN("/");
+        DEBUG_PRINTLN("");
         latitud = lat_GSM;
         longitud = lon_GSM;
         altitudine = 0;
@@ -72,8 +72,8 @@ void check_GPS()
       if (stato == 6){
         stato = 1;
         mqttConnect();
-        DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
-        DEBUG_PRINTLN(colore_ok);
+//        DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
+//        DEBUG_PRINTLN(colore_ok);
         Pubblica(FEED_STATO, colore_ok);
       }
       break;
@@ -84,7 +84,7 @@ void check_GPS()
 }
 
 void gsm_LOC() {
-  
+  //init_GSM();  
   DEBUG_PRINTLN("gsm_LOC()> GSM_LOC entrato");
   int tentativo = 0;
   while (!location.available() && !location.available()) {
@@ -120,7 +120,7 @@ void gsm_LOC() {
         DEBUG_PRINTLN_MOBILE(lon_GSM, 7);
         DEBUG_PRINT("Accuracy: +/- ");
         DEBUG_PRINT(accuratezza);
-        DEBUG_PRINTLN("m");
-        DEBUG_PRINTLN();
+        DEBUG_PRINTLN("m\n");
+//        DEBUG_PRINTLN();
         Pubblica(FEED_DEBUG, String("Triangolazione cella COMPLETA").c_str());
 }
