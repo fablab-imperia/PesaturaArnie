@@ -18,48 +18,30 @@ void spegni_tutto(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia, i
 
   rtc.setDate(1, 1, 18);
 
-  //  Pubblica(FEED_DEBUG, String("Adesso: "+String(rtc.getHours())+":"+String(rtc.getMinutes())+":"+String(rtc.getSeconds())).c_str());
-  //  Pubblica(FEED_DEBUG, String("Sveglia: "+String(ore)+":"+String(minuti)+":"+String(secondi)).c_str());
-
-  SerialAT.write("AT+CPWROFF");
   scale.power_down();
   digitalWrite(pin_GPS, LOW);
   DEBUG_PRINTLN("Sleep!!!");
-  gsmAccess.lowPowerMode();
-     
-//  int sveglia = 0;
-  while (rtc.getDay()<giorni+1 || rtc.getHours()<ora_sveglia || rtc.getMinutes()<minuti_sveglia || rtc.getSeconds()<secondi_sveglia){
-//  while (sveglia < 6) {
-    DEBUG_PRINT("spegni_tutto() > Aspetto: ");
-//    DEBUG_PRINT(6 - sveglia);
-//    DEBUG_PRINTLN(" secondi.");
-    delay(10000);
-//    sveglia ++;
+  
+  gsmAccess.shutdown();
+  DEBUG_PRINT("spegni_tutto() > Aspetto: ");
+  do {
+    DEBUG_PRINT(".");
+
+    delay(1000);
 
     if (arnia_sollevata){
       riaccendi_tutto();
       allarme();
     }
-  }
+  } while (rtc.getDay()<giorni+1 || rtc.getHours()<ora_sveglia || rtc.getMinutes()<minuti_sveglia || rtc.getSeconds()<secondi_sveglia);
 }
 
 void riaccendi_tutto(){
-  gsmAccess.noLowPowerMode();
-  pinMode(GSM_DTR, OUTPUT);                 // Accendi modulo GPRS
-  digitalWrite(GSM_DTR, LOW);
-  delay(5);
-
-  pinMode(GSM_RESETN, OUTPUT);
-  digitalWrite(GSM_RESETN, HIGH);
-  delay(100);
-  digitalWrite(GSM_RESETN, LOW);
-  
+    
   delay(1000);       
   scale.power_up();
   delay(2000);
-
-  init_GSM();
-  mqttConnect();
+  
 }
 
 
@@ -135,12 +117,7 @@ void trova_casa(){
 
 
 void allarme(){                                                                                             // Se l'arnia viene spostata...
-/*  unsigned long inizio_MQTT = millis();
-  while(!mqtt.connected() && millis()-inizio_MQTT < timeOutMQTT){                                           // Se non sono connesso al boroker
-    DEBUG_PRINTLN("allarme()> chiamo mqttConnect...");
-    mqttConnect();                                                                                          // mi connetto
-  }*/
-  
+
   Pubblica(FEED_STATO, colore_allarme);
   Pubblica(FEED_DEBUG, "Allarme GPS");
   DEBUG_PRINT("allarme() > L'arnia è stata mossa!");
@@ -197,7 +174,7 @@ void orario_SET_RTC() {
   if (fix_Loc_error){                        // Se i dati gps non sono validi imposto orario tramite server NTP
     //rtc.setTime(byte(ore_NTP), byte(minuti_NTP), byte(secondi_NTP));            //gia aggiornato non occorre
     DEBUG_PRINTLN("setup()> RTC aggiornato tramite NTP UTC");
-    Pubblica(FEED_DEBUG, String("Ora impostata tramite NTP UTC: "+String(ore_NTP)+" h, "+String(minuti_NTP)+" m").c_str());
+    Pubblica(FEED_DEBUG, String("Ora impostata tramite NTP UTC: "+String(rtc.getHours())+" h, "+String(rtc.getMinutes())+" m").c_str());
 
     if (stato <= 2){
       stato = 2;
@@ -247,4 +224,12 @@ bool log_debug(double LOG, bool nl){
 
 bool log_debug(long LOG, bool nl){
   return log_debug(String(LOG), nl);
+}
+
+void check_RAM() {
+  #ifdef RAM
+  Serial.println(F("Free RAM = ")); //F function does the same and is now a built in library, in IDE > 1.0.0
+  Serial.println(freeMemory(), DEC);  // print how much RAM is available.
+  #else
+  #endif
 }

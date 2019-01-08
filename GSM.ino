@@ -1,13 +1,13 @@
 void init_GSM (){
   DEBUG_PRINTLN("init_GSM()> Accendo Modulo GPRS");
   // initialize serial communications
-  Serial.begin(9600);
+  //Serial.begin(9600);
   DEBUG_PRINTLN("init_GSM()> Inizializzo Modem");
   // connection state
 
   DEBUG_PRINTLN("init_GSM()> Aggancio la rete cellulare...");
-
-  boolean notConnected = true;
+  
+  
   DEBUG_PRINT("init_GSM()> Tento connessione ad APN GPRS ");
   DEBUG_PRINT(apn);
   DEBUG_PRINT(" con utente ");
@@ -16,8 +16,8 @@ void init_GSM (){
   DEBUG_PRINTLN(user); 
   // After starting the modem with GSM.begin()
   // attach the shield to the GPRS network with the APN, login and password
-  DEBUG_PRINT("init_GSM()> Ready:    ");
-
+  /*DEBUG_PRINT("init_GSM()> Ready:    ");
+  boolean notConnected = true;
   gsmAccess.setTimeout(60000);
   gprs.setTimeout(60000);
   
@@ -50,10 +50,38 @@ void init_GSM (){
     else {
       DEBUG_PRINTLN("Ritento gsmAccess.begin");
       delay(1000);
-     }*/
-  }
+     }
+  }*/
 
-   
+
+  unsigned long inizioGPRS = millis();
+  bool connesso = false;
+  int stato_GPRS = gprs.status();
+  int acces;
+  int atach;
+  check_RAM();
+  DEBUG_PRINTLN("Init()> Stato della connessione GSM_GPRS: 1>Non connesso |4|>Connesso al Web");
+  DEBUG_PRINTLN(stato_GPRS); 
+  DEBUG_PRINTLN("Init()> Attendi Sto eseguendo la connessione......");
+  while ((!connesso || stato_GPRS == 4) && millis()-inizioGPRS < timeOutGPRS) {
+    do {
+      acces = gsmAccess.begin(pin_card, true, true);
+    } while (acces != 3);
+    do {  
+      atach = gprs.attachGPRS(apn, user, pass, true);
+    } while (atach != 4); 
+    DEBUG_PRINTLN("Init_GSM()> Stato del GSM: 1>Pronto 2>Attesa |3|>Attivo");
+    DEBUG_PRINTLN(acces); 
+    DEBUG_PRINTLN("Init_GSM()> Stato del GPRS: 1>Pronto 2>Non connesso |4|>Connesso");
+    DEBUG_PRINTLN(atach); 
+    if (gprs.ping("www.google.com")> 0) {
+      connesso = true;
+    } else DEBUG_PRINTLN("Init_GSM> Non connesso ritento");
+    delay(1000);
+  }
+  if (gprs.status() != 4) {
+    DEBUG_PRINTLN("Init_GSM()> "); 
+  }
   #ifdef SCAN 
     
     
@@ -73,50 +101,34 @@ void init_GSM (){
   #else 
     DEBUG_PRINTLN("init_GSM()> Diagnostica modem disabilitata definire #SCAN per riattivare");
   #endif
+
+  
+
+  
 }
 
 
 
 void orario_GSM()
 {
-  DEBUG_PRINTLN("orario_GSM()> contatto il server NTP per l'orario UTC");
+  
+  DEBUG_PRINTLN("orario_GSM()> contatto la cella per l'orario UTC");
   //Pubblica(FEED_DEBUG, "orario_GSM()> contatto il server NTP per l'orario UTC");
   long int epoch = gsmAccess.getTime();
   DEBUG_PRINTLN("orario_GSM()> start");
   DEBUG_PRINT("Unix time = ");
   DEBUG_PRINTLN(epoch);
   rtc.setEpoch(epoch);
-  //Pubblica(FEED_DEBUG, "orario_GSM()> Server NTP contattato ora rilevata");
-  // print the hour, minute and second:
   DEBUG_PRINT("The UTC time is ");       // UTC is the time at Greenwich Meridian (GMT)
-  //ore_NTP = (epoch  % 86400L) / 3600;
-  ore_NTP = rtc.getHours();
-  DEBUG_PRINT(ore_NTP); // print the hour (86400 equals secs per day)
+  DEBUG_PRINT(rtc.getHours());
   DEBUG_PRINT(':');
-  if ( ((epoch % 3600) / 60) < 10 ) {
-    // In the first 10 minutes of each hour, we'll want a leading '0'
-    DEBUG_PRINT('0');
-  }
-  //minuti_NTP = (epoch  % 3600) / 60;
-  minuti_NTP = rtc.getMinutes();
-  DEBUG_PRINT(minuti_NTP); // print the minute (3600 equals secs per minute)
-  DEBUG_PRINT(':');
-  if ( (epoch % 60) < 10 ) {
-    // In the first 10 seconds of each minute, we'll want a leading '0'
-    DEBUG_PRINT('0');
-  }
-  //secondi_NTP = epoch % 60;
-  secondi_NTP = rtc.getSeconds();
-  anno_NTP = rtc.getYear();
-  mese_NTP = rtc.getMonth();
-  giorno_NTP = rtc.getDay();
-  DEBUG_PRINTLN(secondi_NTP); // print the second
+  DEBUG_PRINT(rtc.getMinutes());
+  DEBUG_PRINTLN(rtc.getSeconds());
   DEBUG_PRINT("Del giorno: ");
-  DEBUG_PRINT(giorno_NTP);
+  DEBUG_PRINT(rtc.getDay());
   DEBUG_PRINT(" / ");
-  DEBUG_PRINT(mese_NTP);
+  DEBUG_PRINT(rtc.getMonth());
   DEBUG_PRINT(" / 20");
-  DEBUG_PRINTLN(anno_NTP);
-  //rtc.setTime(byte(ore_NTP), byte(minuti_NTP), byte(secondi_NTP));
+  DEBUG_PRINTLN(rtc.getYear());
   DEBUG_PRINTLN("orario_GSM()> end");
 }

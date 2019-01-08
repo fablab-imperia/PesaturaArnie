@@ -4,6 +4,6 @@ float livello_batteria(){                                                       
   tens = analogRead(ADC_BATTERY)* (4.3 / 1023.0);                             // Leggo la tensione della batteria
   
   
-//  Serial.println(100*(val-max_batteria)/(max_batteria-min_batteria)+100);
+//  DEBUG_PRINTLN(100*(val-max_batteria)/(max_batteria-min_batteria)+100);
   return (100*(tens-max_batteria)/(max_batteria-min_batteria)+100);                  // Ritorna la percentuale della batteria, considerando
 }                                                                                   // 0% min_batteria e 100% max_batteria

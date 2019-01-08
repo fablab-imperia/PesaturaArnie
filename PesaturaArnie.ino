@@ -7,8 +7,9 @@ A1 --> DD
 #define SerialAT SerialGSM
 #define TINY_GSM_MODEM_UBLOX
 #define DEBUG_PORT Serial
-#define DEBUG
+#define DEBUG_SD
 #define SCAN
+#define RAM
 
 //#include <TinyGsmClient.h>                                      // Per gestire il modem GSM
 #include <MKRGSM.h>
@@ -16,6 +17,7 @@ A1 --> DD
 #include <RTCZero.h>                                            // Par gestire l'RTC interno
 #include <PubSubClient.h>                                       // Per pubblicare messaggi via MQTT
 #include <NMEAGPS.h>                                            // Per il GPS
+#include <MemoryFree.h>;
 
 #include <SPI.h>
 #include <SD.h>
@@ -25,7 +27,7 @@ A1 --> DD
 
 
 
-/*
+
 //Stampiamo usando debug print per accendere e spegnere le stampe all'occorenza
 #ifdef DEBUG
  #define DEBUG_PRINT(x)             Serial.print (x)
@@ -33,20 +35,22 @@ A1 --> DD
  #define DEBUG_PRINTLN(x)           Serial.println (x)
  #define DEBUG_PRINT_MOBILE(x, y)   Serial.print (x, y)
  #define DEBUG_PRINTLN_MOBILE(x, y) Serial.println (x, y)
+ #define SVEGLIA
 #else
  #define DEBUG_PRINT(x)
  #define DEBUG_PRINTDEC(x)
  #define DEBUG_PRINTLN(x)
  #define DEBUG_PRINT_MOBILE(x, y)
  #define DEBUG_PRINTLN_MOBILE(x, y)
-#endif*/
+#endif
 
-#ifdef DEBUG
+#ifdef DEBUG_SD
  #define DEBUG_PRINT(x)             log_debug(x, false)
 // #define DEBUG_PRINTDEC(x)          Serial.print (x, DEC)
  #define DEBUG_PRINTLN(x)           log_debug(x, true)
  #define DEBUG_PRINT_MOBILE(x, y)   Serial.print (x, y)
  #define DEBUG_PRINTLN_MOBILE(x, y) Serial.println (x, y)
+ #define SVEGLIA
 #else
  #define DEBUG_PRINT(x)
  #define DEBUG_PRINTDEC(x)
@@ -78,9 +82,9 @@ int stato;                                                      // 0 - Setup, 1 
 
 //GPS e pertinenti
 #define MIN_SAT_CHECK 5                                         // Numero minimo satelliti
-#define maxTimeGpsInactived 60000                               // Tempo massimo di inattivita del GPS prima dell' invio dell allarme per GPS danneggiato-----------------
-#define timeOutMQTT 300000                                      // Tempo massimo connessione MQTT
-#define timeOutGPRS 300000                                      // Tempo massimo connessione rete cellulare
+#define maxTimeGpsInactived 10000                               // Tempo massimo di inattivita del GPS prima dell' invio dell allarme per GPS danneggiato-----------------
+#define timeOutMQTT 30000                                      // Tempo massimo connessione MQTT
+#define timeOutGPRS 30000                                      // Tempo massimo connessione rete cellulare
 #define tolleranza_GPS 0.005                                    // Tolleranza di errore accettabile (in gradi) prima di chiamare allarme()
 int ore;                                                        //
 int minuti;                                                     // orario GPS
@@ -117,16 +121,11 @@ const char user[] = "";
 const char pass[] = "";
 const char pin_card[] = "";
 
-int accuratezza = 9999;                                         //lat e lon della cella gsm
-double lat_GSM = 0;
-double lon_GSM = 0;
+                                         //lat e lon della cella gsm
+//double lat_GSM = 0;   //definite dentro la funzione loc_GSM
+//double lon_GSM = 0;
 
-int ore_NTP;                                                        //
-int minuti_NTP;                                                     // orario server NTP UTC
-int secondi_NTP;                                                    //
-int anno_NTP;
-int mese_NTP;
-int giorno_NTP;
+
 
 
 //variabili per la gestione
@@ -141,7 +140,6 @@ bool casa_trovata;
 double latitud;                                                 // Coordinate in cui si trova l'arnia effettivamente
 double longitud;
 float altitudine;
-unsigned long timeInactivity;                                   // Tempo di vita del GPS
 int satelliti;                                                  // Numero satelliti utilizzati
 unsigned int progressivo = 0;                                   // Progressivo ricerche GPS
 
@@ -165,31 +163,13 @@ void setup() {
 
   delay(10000);
   
-  DEBUG_PORT.begin(9600);
-  delay(2000);
-  /*while (!Serial){
-    ;
-  }*/
+  Serial.begin(9600);
 
-  /*DEBUG_PRINTLN("Init()> Starting Arduino GPRS NTP client.");
-  // connection state
-  bool connected = false;
-  // After starting the modem with GSM.begin()
-  // attach the shield to the GPRS network with the APN, login and password
-  while (!connected) {
-    if ((gsmAccess.begin("") == GSM_READY) &&
-        (gprs.attachGPRS(apn, user, pass) == GPRS_READY)) {
-      connected = true;
-      DEBUG_PRINTLN("Init()> Connected");
-    } else {
-      DEBUG_PRINTLN("Init()> Not connected");
-      delay(1000);
-    }
-  }*/
-  //DEBUG_PRINTLN("Init()> Starting connection to server...");
-  //DEBUG_PRINTLN("Init()> OK UDP Connection");
-  //long int orario_NEW = gsmAccess.getTime();
-  //DEBUG_PRINTLN(orario_NEW);
+  #ifdef SVEGLIA
+  Serial.println("DEBUG ATTIVO");
+  #else
+  Serial.println("DEBUG DISATTIVO");
+  #endif
 
   delay(4000);
   Serial.print("Inizializzazione Card: ");
@@ -215,11 +195,7 @@ void setup() {
   DEBUG_PRINT("setup()> Broker MQTT: ");
   DEBUG_PRINTLN(broker);
   
-  DEBUG_PRINTLN("setup()> MQTT Init...");
-
-  //mqtt_init();                                                  // Connetto alla rete GPRS e al broker mqtt
-  //init_GSM();
-  //mqttConnect();
+  DEBUG_PRINTLN("setup()> MQTT Init..."); 
   
   Pubblica(FEED_DEBUG, "SD: "+String(log_debug("Test SD...", true)));
   
@@ -256,6 +232,7 @@ void setup() {
 }
 
 void loop() {
+  DEBUG_PRINTLN("Loop()> inizio loop lancio gps check");
   check_GPS();
   DEBUG_PRINT("loop()> Controllo se la casa e' stata trovata...  ");
   if (!casa_trovata){
@@ -276,18 +253,6 @@ void loop() {
   DEBUG_PRINT(batteria);
   DEBUG_PRINT("....>.... in volt");
   //DEBUG_PRINTLN(tens);
-  
-  
-/*  unsigned long inizio_MQTT = millis();
-  while(!mqtt.connected() && millis()-inizio_MQTT < timeOutMQTT){
-    DEBUG_PRINTLN("loop()> chiamo mqttConnect...");
-  mqttConnect();
-
-    if (mqtt.connected()){
-      DEBUG_PRINTLN("loop()> Connessione MQTT riuscita...");
-    } else {
-      DEBUG_PRINTLN("loop()> mqttConnect fallito: ritento...");
-    }*/
   
 
   DEBUG_PRINTLN("loop()> Pubblico i FEED peso e batteria");
@@ -349,42 +314,8 @@ void loop() {
     }
   }
 
-
-  /*check_GPS();
-  mqttConnect();
-  if (ore == 99 && minuti == 99 && secondi == 99){                        // Se i dati non sono validi imposto un'ora a caso che verrà corretta in seguito
-    rtc.setTime(byte(1), byte(0), byte(0));
-    DEBUG_PRINTLN("setup()> Errore impostazione ora su RTC...");
-    Pubblica(FEED_DEBUG, "Errore impostazione ora");
-
-    if (stato < 2){
-      stato = 2;
-      Pubblica(FEED_STATO, colore_ora_errata);
-      DEBUG_PRINT("setup()> Pubblico su FEED_STATO valore ");
-      DEBUG_PRINTLN(colore_ora_errata);
-    }
-  } else {
-    rtc.setTime(byte(ore), byte(minuti), byte(secondi));                  // Se i dati sono validi imposto l' ora
-    Pubblica(FEED_DEBUG, String("Ora: "+String(ore)+" h, "+String(minuti)+" m").c_str());
-
-    if (stato == 2){
-      stato = 1;
-      DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
-      DEBUG_PRINTLN(colore_ok);
-      Pubblica(FEED_STATO, colore_ok);
-    }
-  }*/
-
-/*
-  if (stato == 1){
-    DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
-    DEBUG_PRINTLN(colore_ok);
-    Pubblica(FEED_STATO, colore_ok);
-  }
-*/
-
   DEBUG_PRINTLN("loop()> Chiamo spegni tutto e avvio standby... ");
-  #ifdef DEBUG
+  #ifdef SVEGLIA
     if (rtc.getHours() == 23 && rtc.getMinutes() >= 58)
     {spegni_tutto(0, 1, byte(30), 0);}                                                      // Sleep mode per 1 minuto
     else if (rtc.getMinutes() >= 58)
@@ -394,6 +325,8 @@ void loop() {
   #else
     spegni_tutto(ore_default, minuti_default, secondi_default, 1);                                          // Sleep mode fino a domani alle 4:30:00 UTC (default)
   #endif
-
+  //spegni_tutto(0,0,0,0);
+  DEBUG_PRINT("Loop()> Valore variabile stato:  ");
+  DEBUG_PRINTLN(stato);
   riaccendi_tutto();
 }

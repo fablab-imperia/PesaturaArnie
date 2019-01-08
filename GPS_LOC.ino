@@ -17,24 +17,26 @@ void check_GPS()
         orario_GSM();
         gsm_LOC();
         orario_SET_RTC();
-        latitud = lat_GSM;
-        longitud = lon_GSM;
+        //latitud = lat_GSM;
+        //longitud = lon_GSM;
         altitudine = 0;
         satelliti = 0;
-        DEBUG_PRINTLN_MOBILE(latitud, 7);
-        DEBUG_PRINTLN_MOBILE(longitud, 7);
-        DEBUG_PRINTLN(altitudine);
+        //DEBUG_PRINTLN_MOBILE(latitud, 7);
+        //DEBUG_PRINTLN_MOBILE(longitud, 7);
+        //DEBUG_PRINTLN(altitudine);
+        DEBUG_PRINTLN("check_GPS> Tempo eccessivo GPS loc con GSM e stato era != 6");
         break;
       }
       else if (stato == 6) {
         DEBUG_PRINTLN("");
-        latitud = lat_GSM;
-        longitud = lon_GSM;
+        //latitud = lat_GSM;
+        //longitud = lon_GSM;
         altitudine = 0;
         satelliti, ore, minuti, secondi = 0, 99, 99, 99;
         DEBUG_PRINTLN_MOBILE(latitud, 7);
         DEBUG_PRINTLN_MOBILE(longitud, 7);
         DEBUG_PRINTLN(altitudine);
+        DEBUG_PRINTLN("check_GPS> Tempo eccessivo GPS loc con GSM e stato è 6");
         break;
       }
     }
@@ -71,7 +73,7 @@ void check_GPS()
 
       if (stato == 6){
         stato = 1;
-        mqttConnect();
+        //mqttConnect();
 //        DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
 //        DEBUG_PRINTLN(colore_ok);
         Pubblica(FEED_STATO, colore_ok);
@@ -84,7 +86,11 @@ void check_GPS()
 }
 
 void gsm_LOC() {
-  //init_GSM();  
+  int accuratezza = 9999;
+  if (gprs.status() != 4) {
+    DEBUG_PRINTLN("gsm_LOC()> Modem Disconnesso rieseguo la connessione init_GSM");
+    init_GSM();  
+  }
   DEBUG_PRINTLN("gsm_LOC()> GSM_LOC entrato");
   int tentativo = 0;
   while (!location.available() && !location.available()) {
@@ -99,8 +105,8 @@ void gsm_LOC() {
       tentativo = 0;
     }
     accuratezza = location.accuracy();
-    lat_GSM = location.latitude();
-    lon_GSM = location.longitude();
+    latitud = location.latitude();
+    longitud = location.longitude();
     if (location.available()){
       /*DEBUG_PRINT_MOBILE(lat_GSM, 7);
       DEBUG_PRINT(";");
@@ -115,9 +121,9 @@ void gsm_LOC() {
   }
   DEBUG_PRINTLN("gsm_LOC()> GSM_LOC posizione trovata"); 
   DEBUG_PRINT("Location: Lat");
-        DEBUG_PRINT_MOBILE(lat_GSM, 7);
+        DEBUG_PRINT_MOBILE(latitud, 7);
         DEBUG_PRINT(",Lon ");
-        DEBUG_PRINTLN_MOBILE(lon_GSM, 7);
+        DEBUG_PRINTLN_MOBILE(longitud, 7);
         DEBUG_PRINT("Accuracy: +/- ");
         DEBUG_PRINT(accuratezza);
         DEBUG_PRINTLN("m\n");
