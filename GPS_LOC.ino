@@ -17,8 +17,10 @@ void check_GPS()
         orario_GSM();
         gsm_LOC();
         orario_SET_RTC();
-        //latitud = lat_GSM;
-        //longitud = lon_GSM;
+        if (latitudine_casa == 0 && longitudine_casa == 0){
+          latitudine_casa = latitud;
+          longitudine_casa = longitud;
+        }
         altitudine = 0;
         satelliti = 0;
         //DEBUG_PRINTLN_MOBILE(latitud, 7);

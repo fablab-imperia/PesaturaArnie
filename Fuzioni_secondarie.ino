@@ -118,24 +118,40 @@ void trova_casa(){
 
 void allarme(){                                                                                             // Se l'arnia viene spostata...
 
+  DEBUG_PRINTLN("allarme() > L'arnia è stata mossa!");
   Pubblica(FEED_STATO, colore_allarme);
   Pubblica(FEED_DEBUG, "Allarme GPS");
-  DEBUG_PRINT("allarme() > L'arnia è stata mossa!");
-
-  int controllo = 120;
+  
+  int controllo = 10;
+  int controllo_init = controllo;
   while(controllo > 0){
-    check_GPS();                                                                                            // Controllo se la posizione GPS è affidabile
+    DEBUG_PRINTLN("allarme() > Allarme in corso contatto il GPS!");
+    check_GPS();
+    DEBUG_PRINTLN("Allarme()> stampo le coordinate Lat e Long Casa");// Controllo se la posizione GPS è affidabile
+    DEBUG_PRINT("Latitudine  ");
+    DEBUG_PRINT(latitudine_casa);
+    DEBUG_PRINT("   Longitudine  ");
+    DEBUG_PRINTLN(longitudine_casa);
 //    mqttConnect();                                                                                        // mi connetto
     if (latitud != 0 || longitud != 0){                                                                     // Se è affidabile la pubblico
       Pubblica(FEED_POSIZIONE, String(String(progressivo)+","+String(latitud, 8)+","+String(longitud, 8)+","+String(altitudine, 1)).c_str());
       if(abs(latitudine_casa-latitud)<tolleranza_GPS && abs(longitudine_casa-longitud)<tolleranza_GPS){     // Se l'arnia è a posto
-        controllo--;                                                                                        // controllo altre volte
+        controllo--;
+        DEBUG_PRINTLN("Allarme()> L'Arnia sta rientrando nel raggio di casa");
+        DEBUG_PRINT("Allarme()> Controllo ancora ");// Controllo se la posizione GPS è affidabile
+        DEBUG_PRINTLN(controllo_init-controllo);
+        
       } else {
-        controllo = 120;                                                                                    // altrimenti continuo
+        DEBUG_PRINTLN("allarme() > L'Arnia è sempre fuori da casa");
+        controllo = 10;                                                                                    // altrimenti continuo
         //delay(30000);
       }
     }
-    delay(60000);
+    delay(10000);
+    DEBUG_PRINTLN("allarme() > Controllo batteria");
+    float batteria = livello_batteria();
+    Pubblica(FEED_BATTERIA, String(batteria));                 // Pubblico lo stato della batteria in percentuale
+    Pubblica(FEED_DEBUG, ("Batt: "+String(batteria)));
   }
 
 //  mqttConnect();
@@ -163,6 +179,10 @@ void allarme(){                                                                 
 //      DEBUG_PRINTLN(colore_batteria_bassa);
       Pubblica(FEED_STATO, colore_batteria_bassa);
       break;
+
+    case 6:
+      Pubblica(FEED_STATO, colore_GPS_staccato);
+      break;
   }
 
   arnia_sollevata = false;
@@ -189,8 +209,8 @@ void orario_SET_RTC() {
   }
 }
 
-bool log_debug(String LOG, bool nl){
-  if (nl){
+bool log_debug(String LOG, bool ln){
+  if (ln){
     Serial.println(LOG);
   } else {
     Serial.print(LOG);
@@ -210,20 +230,20 @@ bool log_debug(String LOG, bool nl){
   }
 }
 
-bool log_debug(int LOG, bool nl){
-  return log_debug(String(LOG), nl);
+bool log_debug(int LOG, bool ln){
+  return log_debug(String(LOG), ln);
 }
 
-bool log_debug(float LOG, bool nl){
-  return log_debug(String(LOG), nl);
+bool log_debug(float LOG, bool ln){
+  return log_debug(String(LOG), ln);
 }
 
-bool log_debug(double LOG, bool nl){
-  return log_debug(String(LOG), nl);
+bool log_debug(double LOG, bool ln){
+  return log_debug(String(LOG), ln);
 }
 
-bool log_debug(long LOG, bool nl){
-  return log_debug(String(LOG), nl);
+bool log_debug(long LOG, bool ln){
+  return log_debug(String(LOG), ln);
 }
 
 void check_RAM() {

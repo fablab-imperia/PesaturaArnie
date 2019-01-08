@@ -9,7 +9,7 @@ A1 --> DD
 #define DEBUG_PORT Serial
 #define DEBUG_SD
 #define SCAN
-#define RAM
+//#define RAM
 
 //#include <TinyGsmClient.h>                                      // Per gestire il modem GSM
 #include <MKRGSM.h>
@@ -173,13 +173,14 @@ void setup() {
 
   delay(4000);
   Serial.print("Inizializzazione Card: ");
+  #ifdef DEBUG_SD
   if (!SD.begin(4)) //il Pin 4 è collegato a CS
   {
     Serial.println("FALLITA!");
   } else {
     Serial.println("ESEGUITO!");
   }
-
+  #endif
 
   DEBUG_PRINTLN("Init()> Inizializzo i dispositivi");
   rtc.begin();                                                    // Inizializzo l' RTC interno
@@ -326,6 +327,7 @@ void loop() {
     spegni_tutto(ore_default, minuti_default, secondi_default, 1);                                          // Sleep mode fino a domani alle 4:30:00 UTC (default)
   #endif
   //spegni_tutto(0,0,0,0);
+  DEBUG_PRINTLN("");
   DEBUG_PRINT("Loop()> Valore variabile stato:  ");
   DEBUG_PRINTLN(stato);
   riaccendi_tutto();
