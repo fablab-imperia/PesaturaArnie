@@ -7,7 +7,7 @@ A1 --> DD
 #define SerialAT SerialGSM
 #define TINY_GSM_MODEM_UBLOX
 #define DEBUG_PORT Serial
-#define DEBUG_SD
+#define DEBUG
 #define SCAN
 //#define RAM
 
@@ -29,20 +29,7 @@ A1 --> DD
 
 
 //Stampiamo usando debug print per accendere e spegnere le stampe all'occorenza
-#ifdef DEBUG
- #define DEBUG_PRINT(x)             Serial.print (x)
- #define DEBUG_PRINTDEC(x)          Serial.print (x, DEC)
- #define DEBUG_PRINTLN(x)           Serial.println (x)
- #define DEBUG_PRINT_MOBILE(x, y)   Serial.print (x, y)
- #define DEBUG_PRINTLN_MOBILE(x, y) Serial.println (x, y)
- #define SVEGLIA
-#else
- #define DEBUG_PRINT(x)
- #define DEBUG_PRINTDEC(x)
- #define DEBUG_PRINTLN(x)
- #define DEBUG_PRINT_MOBILE(x, y)
- #define DEBUG_PRINTLN_MOBILE(x, y)
-#endif
+
 
 #ifdef DEBUG_SD
  #define DEBUG_PRINT(x)             log_debug(x, false)
@@ -51,13 +38,37 @@ A1 --> DD
  #define DEBUG_PRINT_MOBILE(x, y)   Serial.print (x, y)
  #define DEBUG_PRINTLN_MOBILE(x, y) Serial.println (x, y)
  #define SVEGLIA
+ #else
+ #ifdef DEBUG
+  #define DEBUG_PRINT(x)             Serial.print(x)
+   #define DEBUG_PRINTDEC(x)          Serial.print(x, DEC)
+   #define DEBUG_PRINTLN(x)           Serial.println(x)
+   #define DEBUG_PRINT_MOBILE(x, y)   Serial.print(x, y)
+   #define DEBUG_PRINTLN_MOBILE(x, y) Serial.println(x, y)
+   #define SVEGLIA
+   #else
+     #define DEBUG_PRINT(x)
+     #define DEBUG_PRINTDEC(x)
+     #define DEBUG_PRINTLN(x)
+     #define DEBUG_PRINT_MOBILE(x, y)
+     #define DEBUG_PRINTLN_MOBILE(x, y)
+     #endif
+  #endif
+
+/*#ifdef DEBUG
+ #define DEBUG_PRINT(x)             Serial.print(x)
+ #define DEBUG_PRINTDEC(x)          Serial.print(x, DEC)
+ #define DEBUG_PRINTLN(x)           Serial.println(x)
+ #define DEBUG_PRINT_MOBILE(x, y)   Serial.print(x, y)
+ #define DEBUG_PRINTLN_MOBILE(x, y) Serial.println(x, y)
+ #define SVEGLIA
 #else
  #define DEBUG_PRINT(x)
  #define DEBUG_PRINTDEC(x)
  #define DEBUG_PRINTLN(x)
  #define DEBUG_PRINT_MOBILE(x, y)
  #define DEBUG_PRINTLN_MOBILE(x, y)
-#endif
+#endif*/
 
 
 // definizione FEED mqtt
@@ -82,9 +93,9 @@ int stato;                                                      // 0 - Setup, 1 
 
 //GPS e pertinenti
 #define MIN_SAT_CHECK 5                                         // Numero minimo satelliti
-#define maxTimeGpsInactived 10000                               // Tempo massimo di inattivita del GPS prima dell' invio dell allarme per GPS danneggiato-----------------
-#define timeOutMQTT 30000                                      // Tempo massimo connessione MQTT
-#define timeOutGPRS 30000                                      // Tempo massimo connessione rete cellulare
+#define maxTimeGpsInactived 120000                               // Tempo massimo di inattivita del GPS prima dell' invio dell allarme per GPS danneggiato-----------------
+#define timeOutMQTT 120000                                      // Tempo massimo connessione MQTT
+#define timeOutGPRS 120000                                      // Tempo massimo connessione rete cellulare
 #define tolleranza_GPS 0.005                                    // Tolleranza di errore accettabile (in gradi) prima di chiamare allarme()
 int ore;                                                        //
 int minuti;                                                     // orario GPS
@@ -165,27 +176,35 @@ void setup() {
   
   Serial.begin(9600);
 
-  #ifdef SVEGLIA
-  Serial.println("DEBUG ATTIVO");
+  #ifdef DEBUG_SD
+  Serial.println("DEBUG ATTIVO CON SD RICORDARSI DI COLLEGARE IL DATALOGGER");
   #else
-  Serial.println("DEBUG DISATTIVO");
+    #ifdef DEBUG
+      Serial.println("DEBUG ATTIVO SENZA SD ");
+    #else
+    Serial.println("DEBUG DISATTIVO");
+    #endif
   #endif
 
-  delay(4000);
-  Serial.print("Inizializzazione Card: ");
+  delay(40000);
+  
+  Serial.print("2");
+  DEBUG_PRINTLN("Init()> Inizializzo i dispositivi");
+  rtc.begin();                                                    // Inizializzo l' RTC interno
+  gpsPort.begin(9600);
+  scale.begin(A1, A0);                                            //HX711.DOUT  - pin #A1            HX711.PD_SCK - pin #A0
+
   #ifdef DEBUG_SD
+  Serial.print("Inizializzazione Card: ");
+ 
   if (!SD.begin(4)) //il Pin 4 è collegato a CS
   {
     Serial.println("FALLITA!");
   } else {
     Serial.println("ESEGUITO!");
   }
+  Pubblica(FEED_DEBUG, "SD: "+String(log_debug("Test SD...", true)));
   #endif
-
-  DEBUG_PRINTLN("Init()> Inizializzo i dispositivi");
-  rtc.begin();                                                    // Inizializzo l' RTC interno
-  gpsPort.begin(9600);
-  scale.begin(A1, A0);                                            //HX711.DOUT  - pin #A1            HX711.PD_SCK - pin #A0
 
   pinMode(pin_GPS, OUTPUT);  
   pinMode(pin_interrupt, INPUT_PULLDOWN);
@@ -198,7 +217,7 @@ void setup() {
   
   DEBUG_PRINTLN("setup()> MQTT Init..."); 
   
-  Pubblica(FEED_DEBUG, "SD: "+String(log_debug("Test SD...", true)));
+  
   
   DEBUG_PRINTLN("setup()> Effettuo la tara della Bilancia");                                                       
   scale.set_scale(-18200);                                      // Calibro la scala (vedere il file README della libreria HX711) 
@@ -300,6 +319,12 @@ void loop() {
     Pubblica(FEED_STATO, colore_ok);
   }
 
+  if (!fix_Loc_error){
+    if (stato < 1){
+      stato = 1;
+      Pubblica(FEED_STATO, colore_ok);
+    }
+  }
 
   //|check_GPS();
   if (latitud != 0.0 || longitud != 0.0){                               // Se la posizione è affidabile la pubblico
@@ -314,9 +339,9 @@ void loop() {
       allarme();                                                                                                              // Se l'arnia è stata spostata chiamo allarme()
     }
   }
-
+  Pubblica(FEED_DEBUG, "Loop()> Dormo!!!!!");
   DEBUG_PRINTLN("loop()> Chiamo spegni tutto e avvio standby... ");
-  #ifdef SVEGLIA
+  /*#ifdef SVEGLIA
     if (rtc.getHours() == 23 && rtc.getMinutes() >= 58)
     {spegni_tutto(0, 1, byte(30), 0);}                                                      // Sleep mode per 1 minuto
     else if (rtc.getMinutes() >= 58)
@@ -325,7 +350,10 @@ void loop() {
     
   #else
     spegni_tutto(ore_default, minuti_default, secondi_default, 1);                                          // Sleep mode fino a domani alle 4:30:00 UTC (default)
-  #endif
+  #endif*/
+
+  spegni_tutto(ore_default, minuti_default, secondi_default, 0);
+  
   //spegni_tutto(0,0,0,0);
   DEBUG_PRINTLN("");
   DEBUG_PRINT("Loop()> Valore variabile stato:  ");

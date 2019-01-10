@@ -33,7 +33,7 @@ void spegni_tutto(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia, i
       riaccendi_tutto();
       allarme();
     }
-  } while (rtc.getDay()<giorni+1 || rtc.getHours()<ora_sveglia || rtc.getMinutes()<minuti_sveglia || rtc.getSeconds()<secondi_sveglia);
+  } while (rtc.getHours()<ora_sveglia || rtc.getMinutes()<minuti_sveglia || rtc.getSeconds()<secondi_sveglia);
 }
 
 void riaccendi_tutto(){
@@ -120,7 +120,7 @@ void allarme(){                                                                 
 
   DEBUG_PRINTLN("allarme() > L'arnia è stata mossa!");
   Pubblica(FEED_STATO, colore_allarme);
-  Pubblica(FEED_DEBUG, "Allarme GPS");
+  Pubblica(FEED_DEBUG, "Allarme()> Allarme GPS");
   
   int controllo = 10;
   int controllo_init = controllo;
@@ -138,11 +138,13 @@ void allarme(){                                                                 
       if(abs(latitudine_casa-latitud)<tolleranza_GPS && abs(longitudine_casa-longitud)<tolleranza_GPS){     // Se l'arnia è a posto
         controllo--;
         DEBUG_PRINTLN("Allarme()> L'Arnia sta rientrando nel raggio di casa");
+        Pubblica(FEED_DEBUG, "Allarme()> L'Arnia sta rientrando nel raggio di casa");
         DEBUG_PRINT("Allarme()> Controllo ancora ");// Controllo se la posizione GPS è affidabile
         DEBUG_PRINTLN(controllo_init-controllo);
         
       } else {
-        DEBUG_PRINTLN("allarme() > L'Arnia è sempre fuori da casa");
+        DEBUG_PRINTLN("Allarme() > L'Arnia è sempre fuori da casa");
+        Pubblica(FEED_DEBUG, "Allarme() > L'Arnia è sempre fuori da casa");
         controllo = 10;                                                                                    // altrimenti continuo
         //delay(30000);
       }
@@ -186,6 +188,7 @@ void allarme(){                                                                 
   }
 
   arnia_sollevata = false;
+  Pubblica(FEED_DEBUG, "Allarme()> L'Arnia è tornata a posto");
 }
 
 
