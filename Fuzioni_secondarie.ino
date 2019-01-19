@@ -27,13 +27,13 @@ void spegni_tutto(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia, i
   do {
     DEBUG_PRINT(".");
 
-    delay(1000);
+    delay(10000);
 
     if (arnia_sollevata){
       riaccendi_tutto();
       allarme();
     }
-  } while (rtc.getHours()<ora_sveglia || rtc.getMinutes()<minuti_sveglia || rtc.getSeconds()<secondi_sveglia);
+  } while (rtc.getHours() != ora_sveglia && rtc.getMinutes() != minuti_sveglia);
 }
 
 void riaccendi_tutto(){
