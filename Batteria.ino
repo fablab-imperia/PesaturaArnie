@@ -1,5 +1,5 @@
 float livello_batteria(){                                                           // Controlla lo stato della batteria...
-  float min_batteria = 3.5;                                                         // La tensione massima della batteria
+  float min_batteria = 3.6;                                                         // La tensione massima della batteria
   float max_batteria = 4.2;                                                         // La tensione minima della batteria
   tens = analogRead(ADC_BATTERY)* (4.3 / 1023.0);                             // Leggo la tensione della batteria
   

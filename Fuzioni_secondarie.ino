@@ -29,11 +29,15 @@ void spegni_tutto(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia, i
 
     delay(10000);
 
+    if (digitalRead(pin_interrupt) == 0){
+      sollevata();
+    }
+
     if (arnia_sollevata){
       riaccendi_tutto();
       allarme();
     }
-  } while (rtc.getHours() != ora_sveglia && rtc.getMinutes() != minuti_sveglia);
+  } while (rtc.getHours() != ora_sveglia || rtc.getMinutes() != minuti_sveglia);
 }
 
 void riaccendi_tutto(){
@@ -251,8 +255,8 @@ bool log_debug(long LOG, bool ln){
 
 void check_RAM() {
   #ifdef RAM
-  Serial.println(F("Free RAM = ")); //F function does the same and is now a built in library, in IDE > 1.0.0
-  Serial.println(freeMemory(), DEC);  // print how much RAM is available.
+  //Serial.println(F("Free RAM = ")); //F function does the same and is now a built in library, in IDE > 1.0.0
+  //Serial.println(freeMemory(), DEC);  // print how much RAM is available.
   #else
   #endif
 }

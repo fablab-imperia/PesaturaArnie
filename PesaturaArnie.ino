@@ -17,7 +17,7 @@ A1 --> DD
 #include <RTCZero.h>                                            // Par gestire l'RTC interno
 #include <PubSubClient.h>                                       // Per pubblicare messaggi via MQTT
 #include <NMEAGPS.h>                                            // Per il GPS
-#include <MemoryFree.h>;
+//#include <MemoryFree.h>;
 
 #include <SPI.h>
 #include <SD.h>
@@ -110,7 +110,6 @@ gps_fix  fix; // This holds on to the latest values
 #define pin_interrupt 0                                         // Pin per interrupt per il risveglio
 #define pin_GPS 1                                               // Pin alimentazione GPS
 #define pin_buzzer 2                                            // buzzer avviso tara eseguita
-#define pin_reset_interrupt 3                                   // pin reset interrupt
 
 //Bilancia
 #define peso_basso -10                                          // Peso minimo (in kg) considerato rischioso
@@ -186,7 +185,7 @@ void setup() {
     #endif
   #endif
 
-  delay(40000);
+//  delay(40000);                             ---------------------------------------------
   
   Serial.print("2");
   DEBUG_PRINTLN("Init()> Inizializzo i dispositivi");
@@ -207,10 +206,9 @@ void setup() {
   #endif
 
   pinMode(pin_GPS, OUTPUT);  
-  pinMode(pin_interrupt, INPUT_PULLDOWN);
+  pinMode(pin_interrupt, INPUT_PULLUP);
   pinMode(pin_buzzer, OUTPUT);
-  pinMode(pin_reset_interrupt, INPUT_PULLDOWN);
-  attachInterrupt(digitalPinToInterrupt(pin_interrupt), sollevata, RISING);
+//  attachInterrupt(digitalPinToInterrupt(pin_interrupt), sollevata, FALLING);
 
   DEBUG_PRINT("setup()> Broker MQTT: ");
   DEBUG_PRINTLN(broker);
