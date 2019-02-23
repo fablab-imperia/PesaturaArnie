@@ -74,7 +74,7 @@ A1 --> DD
 // definizione FEED mqtt
 const char* broker = "io.adafruit.com";                         // Broker MQTT
 #define ADAFRUIT_USERNAME  "fablabimperia"                      // Credenziali broker MQTT Adafruit
-#define AIO_KEY "38367dac2353481e92bff223323fe751"
+#define AIO_KEY "************************"
 #define FEED_PESO "fablabimperia/feeds/Peso"                    // Feed peso
 #define FEED_BATTERIA "fablabimperia/feeds/Batteria"            // Feed stato batteria
 #define FEED_POSIZIONE "fablabimperia/feeds/Posizione/csv"      // Feed posizione GPS
@@ -185,7 +185,7 @@ void setup() {
     #endif
   #endif
 
-//  delay(40000);                             ---------------------------------------------
+  delay(40000);
   
   Serial.print("2");
   DEBUG_PRINTLN("Init()> Inizializzo i dispositivi");
