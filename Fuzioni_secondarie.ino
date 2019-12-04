@@ -1,8 +1,12 @@
-void sollevata(){
-  arnia_sollevata = true;
+void spegni(){
+  scale.power_down();
+  digitalWrite(pin_GPS, LOW);
+  gsmAccess.shutdown();
+  delay(2000);
 }
 
-void spegni_tutto(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia, int giorni){
+
+void dormi(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia){
   DEBUG_PRINT("spegni_tutto() > Setto ora sveglia a ");
   DEBUG_PRINT(ora_sveglia);
   DEBUG_PRINT(":");
@@ -16,21 +20,21 @@ void spegni_tutto(byte ora_sveglia, byte minuti_sveglia, byte secondi_sveglia, i
   DEBUG_PRINT(":");
   DEBUG_PRINTLN(rtc.getSeconds());
 
-  rtc.setDate(1, 1, 18);
+  rtc.setDate(1, 1, 19);
 
-  scale.power_down();
-  digitalWrite(pin_GPS, LOW);
   DEBUG_PRINTLN("Sleep!!!");
+
+  spegni();
   
-  gsmAccess.shutdown();
   DEBUG_PRINT("spegni_tutto() > Aspetto: ");
+  
   do {
     DEBUG_PRINT(".");
 
     delay(10000);
 
     if (digitalRead(pin_interrupt) == 0){
-      sollevata();
+      arnia_sollevata = true;
     }
 
     if (arnia_sollevata){
@@ -50,7 +54,6 @@ void riaccendi_tutto(){
 
 
 void trova_casa(){
-  //|check_GPS();
   int validi = 0;
   casa_trovata = true;
   float Min_lat = 180;
@@ -58,7 +61,6 @@ void trova_casa(){
   float Min_long = 180;
   float MAX_long = -180;
   
-//  mqttConnect();
   Pubblica(FEED_DEBUG, "Cerco posizione casa");
 
   DEBUG_PRINTLN("trova_casa()> Raccolgo 10 posizioni GPS per calcolo casa...");
@@ -93,24 +95,24 @@ void trova_casa(){
   
 
     DEBUG_PRINT("trova_casa()> Massimo valore di longitudine recuperato:  ");
-    DEBUG_PRINTLN(MAX_long);
+    DEBUG_PRINTLN_MOBILE(MAX_long, 7);
     DEBUG_PRINT("trova_casa()> Minimo valore di longitudine recuperato:  ");
-    DEBUG_PRINTLN(Min_long);
+    DEBUG_PRINTLN_MOBILE(Min_long, 7);
     DEBUG_PRINT("trova_casa()> Massimo valore di latitudine recuperato:  ");
-    DEBUG_PRINTLN(MAX_lat);
+    DEBUG_PRINTLN_MOBILE(MAX_lat, 7);
     DEBUG_PRINT("trova_casa()> Minimo valore di latitudine recuperato:  ");
-    DEBUG_PRINTLN(Min_lat);
+    DEBUG_PRINTLN_MOBILE(Min_lat, 7);
 
   }
   
    
-  if (abs(MAX_long-Min_long)<tolleranza_GPS && abs(MAX_lat-Min_lat)<tolleranza_GPS && validi >= 5 && !fix_Loc_error){
+  if (abs(MAX_long-Min_long)<tolleranza_GPS && abs(MAX_lat-Min_lat)<tolleranza_GPS && validi >= 8 && !fix_Loc_error){
     latitudine_casa = latitudine_casa/validi;
     longitudine_casa = longitudine_casa/validi;
     DEBUG_PRINT("trova_casa()> Latitudine casa trovata:  ");
-    DEBUG_PRINTLN(latitudine_casa);
+    DEBUG_PRINTLN_MOBILE(latitudine_casa, 7);
     DEBUG_PRINT("trova_casa()> Longitudine casa trovata:  ");
-    DEBUG_PRINTLN(longitudine_casa);
+    DEBUG_PRINTLN_MOBILE(longitudine_casa, 7);
     Pubblica(FEED_DEBUG, String("Posizione casa trovata").c_str());  
   } else {
     casa_trovata = false;
@@ -121,68 +123,59 @@ void trova_casa(){
 
 
 void allarme(){                                                                                             // Se l'arnia viene spostata...
-
+  init_GSM();
+  
   DEBUG_PRINTLN("allarme() > L'arnia è stata mossa!");
   Pubblica(FEED_STATO, colore_allarme);
   Pubblica(FEED_DEBUG, "Allarme()> Allarme GPS");
+  Telegram("Allarme:%20l'arnia%20è%20stata%20mossa!", chat_id, false);
   
   int controllo = 10;
-  int controllo_init = controllo;
-  while(controllo > 0){
-    DEBUG_PRINTLN("allarme() > Allarme in corso contatto il GPS!");
+  while(controllo > 0 && casa_trovata){                                                                     //Controllare----------------------------------------------------
+    DEBUG_PRINTLN("allarme() > Allarme in corso: contatto il GPS!");
     check_GPS();
-    DEBUG_PRINTLN("Allarme()> stampo le coordinate Lat e Long Casa");// Controllo se la posizione GPS è affidabile
+    DEBUG_PRINTLN("Allarme()> stampo le coordinate Lat e Long Casa");                                       // Controllo la posizione GPS
     DEBUG_PRINT("Latitudine  ");
-    DEBUG_PRINT(latitudine_casa);
+    DEBUG_PRINT_MOBILE(latitudine_casa, 7);
     DEBUG_PRINT("   Longitudine  ");
-    DEBUG_PRINTLN(longitudine_casa);
-//    mqttConnect();                                                                                        // mi connetto
+    DEBUG_PRINTLN_MOBILE(longitudine_casa, 7);
+
     if (latitud != 0 || longitud != 0){                                                                     // Se è affidabile la pubblico
       Pubblica(FEED_POSIZIONE, String(String(progressivo)+","+String(latitud, 8)+","+String(longitud, 8)+","+String(altitudine, 1)).c_str());
       if(abs(latitudine_casa-latitud)<tolleranza_GPS && abs(longitudine_casa-longitud)<tolleranza_GPS){     // Se l'arnia è a posto
         controllo--;
         DEBUG_PRINTLN("Allarme()> L'Arnia sta rientrando nel raggio di casa");
         Pubblica(FEED_DEBUG, "Allarme()> L'Arnia sta rientrando nel raggio di casa");
-        DEBUG_PRINT("Allarme()> Controllo ancora ");// Controllo se la posizione GPS è affidabile
-        DEBUG_PRINTLN(controllo_init-controllo);
-        
+        DEBUG_PRINT("Allarme()> Controllo ancora ");
+        DEBUG_PRINTLN(controllo);
+        delay(180000);
       } else {
         DEBUG_PRINTLN("Allarme() > L'Arnia è sempre fuori da casa");
         Pubblica(FEED_DEBUG, "Allarme() > L'Arnia è sempre fuori da casa");
         controllo = 10;                                                                                    // altrimenti continuo
-        //delay(30000);
       }
     }
-    delay(10000);
+    delay(60000);
     DEBUG_PRINTLN("allarme() > Controllo batteria");
     float batteria = livello_batteria();
-    Pubblica(FEED_BATTERIA, String(batteria));                 // Pubblico lo stato della batteria in percentuale
+    Pubblica(FEED_BATTERIA, String(batteria));                                                            // Pubblico lo stato della batteria in percentuale
     Pubblica(FEED_DEBUG, ("Batt: "+String(batteria)));
   }
 
-//  mqttConnect();
   switch (stato){
     case 1:
-//      DEBUG_PRINT("allarme()> Pubblico su FEED_STATO valore ");
-//      DEBUG_PRINTLN(colore_ok);
       Pubblica(FEED_STATO, colore_ok);
       break;
 
     case 2:
-//      DEBUG_PRINT("allarme()> Pubblico su FEED_STATO valore ");
-//      DEBUG_PRINTLN(colore_ora_errata);
       Pubblica(FEED_STATO, colore_ora_errata);
       break;
 
     case 3:
-//      DEBUG_PRINT("allarme()> Pubblico su FEED_STATO valore ");
-//      DEBUG_PRINTLN(colore_problema_peso);
       Pubblica(FEED_STATO, colore_problema_peso);
       break;
 
     case 4:
-//      DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
-//      DEBUG_PRINTLN(colore_batteria_bassa);
       Pubblica(FEED_STATO, colore_batteria_bassa);
       break;
 
@@ -193,11 +186,13 @@ void allarme(){                                                                 
 
   arnia_sollevata = false;
   Pubblica(FEED_DEBUG, "Allarme()> L'Arnia è tornata a posto");
+  Telegram("Tutto%20è%20tornato%20a%20posto!", chat_id, false);
+  delay(20000);
+  spegni();
 }
 
 
 void orario_SET_RTC() {
-//  mqttConnect();
   if (fix_Loc_error){                        // Se i dati gps non sono validi imposto orario tramite server NTP
     //rtc.setTime(byte(ore_NTP), byte(minuti_NTP), byte(secondi_NTP));            //gia aggiornato non occorre
     DEBUG_PRINTLN("setup()> RTC aggiornato tramite NTP UTC");
@@ -206,14 +201,32 @@ void orario_SET_RTC() {
     if (stato <= 2){
       stato = 2;
       Pubblica(FEED_STATO, colore_ora_errata);
-//      DEBUG_PRINT("setup()> Pubblico su FEED_STATO valore ");
-//      DEBUG_PRINTLN(colore_ora_errata);
     }
   } else  {
     rtc.setTime(byte(ore), byte(minuti), byte(secondi));        // Se i dati sono validi imposto l' ora
     rtc.setDate(1, 1, 18);
     Pubblica(FEED_DEBUG, String("Ora impostata tramite GPS: "+String(ore)+" h, "+String(minuti)+" m").c_str());
   }
+}
+
+void Telegram(String messaggio, int id, bool silenzioso){
+  init_GSM();                                                   // Accendo il modem
+
+  DEBUG_PRINTLN("Telegram() > Iniziamo!");
+  if (clientSSL.connect(server, port)){
+    DEBUG_PRINTLN("Telegram() > Connesso!");
+    DEBUG_PRINTLN("Invio  /bot"+  String(token) + "/sendMessage?chat_id=" + String(id) + "&text=" + messaggio + "&disable_notification=" + String(silenzioso));
+    clientSSL.print("POST ");
+    clientSSL.print("/bot"+  String(token) + "/sendMessage?chat_id=" + String(id) + "&text=" + messaggio + "&disable_notification=" + String(silenzioso));
+    clientSSL.println(" HTTP/1.1");
+    clientSSL.print("Host: ");
+    clientSSL.println(server);
+    clientSSL.println("Connection: close");
+    clientSSL.println();
+    DEBUG_PRINTLN("Telegram() > Inviato!");
+  }
+  delay(10000);
+  DEBUG_PRINTLN("Telegram() > Finito!");
 }
 
 bool log_debug(String LOG, bool ln){
@@ -224,8 +237,8 @@ bool log_debug(String LOG, bool ln){
   }
   
   File file;
-  file = SD.open("log.txt", FILE_WRITE); //File in scrittura
-  if (file) //Se il file è stato aperto correttamente
+  file = SD.open("log.txt", FILE_WRITE);                                      //File in scrittura
+  if (file)                                                                   //Se il file è stato aperto correttamente
   {
     file.println(String(rtc.getHours())+':'+String(rtc.getMinutes())+':'+String(rtc.getSeconds())+"  -->  "+LOG); //Scrivo su file il numero
     
@@ -237,7 +250,7 @@ bool log_debug(String LOG, bool ln){
   }
 }
 
-bool log_debug(int LOG, bool ln){
+bool log_debug(int LOG, bool ln){                                               // Chiamo la funzione precedente modificando il tipo di dato da salvare
   return log_debug(String(LOG), ln);
 }
 

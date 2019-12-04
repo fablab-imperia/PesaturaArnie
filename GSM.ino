@@ -1,4 +1,4 @@
-void init_GSM (){
+void init_GSM(){
   DEBUG_PRINTLN("init_GSM()> Accendo Modulo GPRS");
   // initialize serial communications
   //Serial.begin(9600);
@@ -59,29 +59,30 @@ void init_GSM (){
   int stato_GPRS = gprs.status();
   int acces;
   int atach;
-  check_RAM();
-  DEBUG_PRINTLN("Init()> Stato della connessione GSM_GPRS: 1>Non connesso |4|>Connesso al Web");
+  DEBUG_PRINT("Init()> Stato della connessione GSM_GPRS: 1-->Non connesso |4|-->Connesso al Web:  ");
   DEBUG_PRINTLN(stato_GPRS); 
   DEBUG_PRINTLN("Init()> Attendi Sto eseguendo la connessione......");
-  while ((!connesso || stato_GPRS == 4) && millis()-inizioGPRS < timeOutGPRS) {
+
+  // Era "while ((!connesso || stato_GPRS == 4) && millis()-inizioGPRS < timeOutGPRS) {"
+  while (!connesso && (gsmAccess.status() != 3 || gprs.status() != 4) && millis()-inizioGPRS < timeOutGPRS) {
     do {
       acces = gsmAccess.begin(pin_card, true, true);
-    } while (acces != 3);
+    } while (acces != 3 && millis()-inizioGPRS < timeOutGPRS);
     do {  
       atach = gprs.attachGPRS(apn, user, pass, true);
-    } while (atach != 4); 
-    DEBUG_PRINTLN("Init_GSM()> Stato del GSM: 1>Pronto 2>Attesa |3|>Attivo");
+    } while (atach != 4 && millis()-inizioGPRS < timeOutGPRS);
+    
+    DEBUG_PRINT("Init_GSM()> Stato del GSM: 1-->Pronto 2-->Attesa |3|-->Attivo:  ");
     DEBUG_PRINTLN(acces); 
-    DEBUG_PRINTLN("Init_GSM()> Stato del GPRS: 1>Pronto 2>Non connesso |4|>Connesso");
+    DEBUG_PRINT("Init_GSM()> Stato del GPRS: 1-->Pronto 2-->Non connesso |4|-->Connesso:  ");
     DEBUG_PRINTLN(atach); 
     if (gprs.ping("www.google.com")> 0) {
       connesso = true;
     } else DEBUG_PRINTLN("Init_GSM> Non connesso ritento");
     delay(1000);
   }
-  if (gprs.status() != 4) {
-    DEBUG_PRINTLN("Init_GSM()> "); 
-  }
+
+
   #ifdef SCAN 
     
     

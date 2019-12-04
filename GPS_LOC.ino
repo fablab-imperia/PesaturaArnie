@@ -2,13 +2,11 @@ void check_GPS()
 {
   digitalWrite(pin_GPS, HIGH);
   delay(1000);
+  fix_Loc = false;
   unsigned long tempoAttivita = millis();
-  while ((!gps.available(gpsPort) || !fix_Loc)) {
+  while (((!gps.available(gpsPort) || !fix_Loc) && millis()-tempoAttivita < maxTimeGpsInactived+10000)) {
     if (millis()-tempoAttivita > maxTimeGpsInactived){
       if (stato != 6) {
-//        mqttConnect();
-//        DEBUG_PRINT("\nloop()> Pubblico su FEED_STATO valore ");
-//        DEBUG_PRINTLN(colore_GPS_staccato);
         Pubblica(FEED_STATO, colore_GPS_staccato);
         Pubblica(FEED_DEBUG, String("GPS danneggiato").c_str());
         Pubblica(FEED_DEBUG, String("Cerco una posizione usando la cella GSM").c_str());
@@ -17,15 +15,12 @@ void check_GPS()
         orario_GSM();
         gsm_LOC();
         orario_SET_RTC();
-        if (latitudine_casa == 0 && longitudine_casa == 0){
+/*        if (latitudine_casa == 0 && longitudine_casa == 0){
           latitudine_casa = latitud;
           longitudine_casa = longitud;
-        }
+        }*/
         altitudine = 0;
         satelliti = 0;
-        //DEBUG_PRINTLN_MOBILE(latitud, 7);
-        //DEBUG_PRINTLN_MOBILE(longitud, 7);
-        //DEBUG_PRINTLN(altitudine);
         DEBUG_PRINTLN("check_GPS> Tempo eccessivo GPS loc con GSM e stato era != 6");
         break;
       }
@@ -42,9 +37,6 @@ void check_GPS()
         break;
       }
     }
-    //else DEBUG_PRINT("*");
-    
-    //DEBUG_PRINT(".");
     fix = gps.read();
     satelliti = fix.satellites;
     
@@ -58,26 +50,27 @@ void check_GPS()
       DEBUG_PRINT_MOBILE( fix.longitude(), 6 );
       longitud = fix.longitude();
       DEBUG_PRINT("°      Altitudine: ");
-      DEBUG_PRINTLN_MOBILE( fix.altitude(), 2 );
+      DEBUG_PRINT(fix.altitude());
       altitudine = fix.altitude();
-      DEBUG_PRINT("m,    Satelliti: ");
+      DEBUG_PRINT(" m        Satelliti: ");
       DEBUG_PRINTLN(satelliti);
-      DEBUG_PRINT(fix.dateTime.hours);
-      ore = fix.dateTime.hours;
-      DEBUG_PRINT(":");
-      DEBUG_PRINT(fix.dateTime.minutes);
-      minuti = fix.dateTime.minutes;
-      DEBUG_PRINT(":");
-      DEBUG_PRINTLN(fix.dateTime.seconds);
-      secondi = fix.dateTime.seconds;
-      orario_SET_RTC();
+
+      if (!orario_settato){
+        DEBUG_PRINT(fix.dateTime.hours);
+        ore = fix.dateTime.hours;
+        DEBUG_PRINT(":");
+        DEBUG_PRINT(fix.dateTime.minutes);
+        minuti = fix.dateTime.minutes;
+        DEBUG_PRINT(":");
+        DEBUG_PRINTLN(fix.dateTime.seconds);
+        secondi = fix.dateTime.seconds;
+        orario_SET_RTC();
+        orario_settato = true;
+      }
       progressivo++;
 
       if (stato == 6){
         stato = 1;
-        //mqttConnect();
-//        DEBUG_PRINT("loop()> Pubblico su FEED_STATO valore ");
-//        DEBUG_PRINTLN(colore_ok);
         Pubblica(FEED_STATO, colore_ok);
       }
       break;

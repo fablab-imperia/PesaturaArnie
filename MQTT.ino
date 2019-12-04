@@ -1,4 +1,5 @@
 boolean mqttConnect() {
+  
   unsigned long inizio_MQTT = millis();
   while(!mqtt.connected() && millis()-inizio_MQTT < timeOutMQTT){
     DEBUG_PRINT("mqtt()> Connecting to ");
@@ -18,7 +19,6 @@ boolean mqttConnect() {
 
 
 bool Pubblica(String topic, String messaggio){
-  check_RAM();
   int is = gsmAccess.status();
   DEBUG_PRINT("IS Access alive   ");
   DEBUG_PRINT(is);
@@ -29,16 +29,18 @@ bool Pubblica(String topic, String messaggio){
   bool riuscita = false;
   for(int i=0; i<3 && !riuscita; i++){
     DEBUG_PRINTLN("Pubblica()> Test Connessione");
-    if (gsmAccess.status() != 3) init_GSM();
+    if (gsmAccess.status() != 3) {
+      init_GSM();
+      DEBUG_PRINT("IS Access alive   ");
+      DEBUG_PRINT(gsmAccess.status());
+      DEBUG_PRINTLN("");
+      int x = gprs.ping("www.google.com");
+      DEBUG_PRINT("Ping google in   ");
+      DEBUG_PRINT(x);
+      DEBUG_PRINTLN("  mS");
+    }
     mqttConnect();
-    DEBUG_PRINT("IS Access alive   ");
-    DEBUG_PRINT(gsmAccess.status());
-    DEBUG_PRINTLN("");
-    int x = gprs.ping("www.google.com");
-    DEBUG_PRINT("Ping google in   ");
-    DEBUG_PRINT(x);
-    DEBUG_PRINTLN("  mS");
-    DEBUG_PRINTLN("Pubblica()> Modem Connesso MQTT Connesso-------------------------------");
+    DEBUG_PRINTLN("Pubblica()> Modem Connesso MQTT Connesso");
     riuscita = mqtt.publish(topic.c_str(), messaggio.c_str());
     DEBUG_PRINT("Pubblica() > " + String(i+1) + "° tentativo completato: ");
     if (riuscita){
@@ -55,10 +57,8 @@ bool Pubblica(String topic, String messaggio){
   DEBUG_PRINTLN("Pubblica()> Disconnetto");
   
   DEBUG_PRINT("IS Access alive   ");
-  DEBUG_PRINT(gsmAccess.status());
-  DEBUG_PRINTLN("");
-  check_RAM();
-  DEBUG_PRINTLN("");
+  DEBUG_PRINTLN(gsmAccess.status());
+
   return riuscita;
 }
 
