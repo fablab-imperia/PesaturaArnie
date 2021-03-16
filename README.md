@@ -8,8 +8,8 @@ Il sistema funziona mediante batteria e GPRS ed è basato sulla scheda Arduino M
 
 # Sommario
 - [Componenti](#Componenti)
-- [Schema e Montaggio](#Schema_e_Montaggio)
-- [Installazione software](#Installazione_software)
+- [Schema e Montaggio](#Schema-e-Montaggio)
+- [Installazione software](#Installazione-software)
 
 
 # Componenti
