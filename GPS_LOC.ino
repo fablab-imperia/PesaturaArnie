@@ -4,10 +4,10 @@ void check_GPS()
   delay(1000);
   fix_Loc = false;
   unsigned long tempoAttivita = millis();
-  while (((!gps.available(gpsPort) || !fix_Loc) && millis()-tempoAttivita < maxTimeGpsInactived+10000)) {
-    if (millis()-tempoAttivita > maxTimeGpsInactived){
+  while (((!gps.available(gpsPort) || !fix_Loc) && millis() - tempoAttivita < maxTimeGpsInactived + 10000)) {
+    if (millis() - tempoAttivita > maxTimeGpsInactived) {
       if (stato != 6) {
-        Pubblica(FEED_STATO, colore_GPS_staccato);
+        Pubblica(FEED_STATO, COLORE_GPS_STACCATO);
         Pubblica(FEED_DEBUG, String("GPS danneggiato").c_str());
         Pubblica(FEED_DEBUG, String("Cerco una posizione usando la cella GSM").c_str());
         fix_Loc_error = true;
@@ -15,10 +15,10 @@ void check_GPS()
         orario_GSM();
         gsm_LOC();
         orario_SET_RTC();
-/*        if (latitudine_casa == 0 && longitudine_casa == 0){
-          latitudine_casa = latitud;
-          longitudine_casa = longitud;
-        }*/
+        /*        if (latitudine_casa == 0 && longitudine_casa == 0){
+                  latitudine_casa = latitud;
+                  longitudine_casa = longitud;
+                }*/
         altitudine = 0;
         satelliti = 0;
         DEBUG_PRINTLN("check_GPS> Tempo eccessivo GPS loc con GSM e stato era != 6");
@@ -39,8 +39,8 @@ void check_GPS()
     }
     fix = gps.read();
     satelliti = fix.satellites;
-    
-    if (fix.valid.location && fix.valid.time && satelliti > MIN_SAT_CHECK){
+
+    if (fix.valid.location && fix.valid.time && satelliti > MIN_SAT_CHECK) {
       fix_Loc = true;
       fix_Loc_error = false;
       DEBUG_PRINT("Posizione: ");
@@ -55,7 +55,7 @@ void check_GPS()
       DEBUG_PRINT(" m        Satelliti: ");
       DEBUG_PRINTLN(satelliti);
 
-      if (!orario_settato){
+      if (!orario_settato) {
         DEBUG_PRINT(fix.dateTime.hours);
         ore = fix.dateTime.hours;
         DEBUG_PRINT(":");
@@ -69,14 +69,14 @@ void check_GPS()
       }
       progressivo++;
 
-      if (stato == 6){
+      if (stato == 6) {
         stato = 1;
-        Pubblica(FEED_STATO, colore_ok);
+        Pubblica(FEED_STATO, COLORE_OK);
       }
       break;
     }
   }
-  
+
   digitalWrite(pin_GPS, LOW);
 }
 
@@ -84,7 +84,7 @@ void gsm_LOC() {
   int accuratezza = 9999;
   if (gprs.status() != 4) {
     DEBUG_PRINTLN("gsm_LOC()> Modem Disconnesso rieseguo la connessione init_GSM");
-    init_GSM();  
+    init_GSM();
   }
   DEBUG_PRINTLN("gsm_LOC()> GSM_LOC entrato");
   int tentativo = 0;
@@ -102,26 +102,26 @@ void gsm_LOC() {
     accuratezza = location.accuracy();
     latitud = location.latitude();
     longitud = location.longitude();
-    if (location.available()){
+    if (location.available()) {
       /*DEBUG_PRINT_MOBILE(lat_GSM, 7);
-      DEBUG_PRINT(";");
-      DEBUG_PRINT_MOBILE(lon_GSM, 7);
-      DEBUG_PRINT(";");
-      DEBUG_PRINTLN(accuratezza);*/
+        DEBUG_PRINT(";");
+        DEBUG_PRINT_MOBILE(lon_GSM, 7);
+        DEBUG_PRINT(";");
+        DEBUG_PRINTLN(accuratezza);*/
       if (accuratezza < 1000 && accuratezza != 0) {
-        
+
       }
     }
     tentativo ++;
   }
-  DEBUG_PRINTLN("gsm_LOC()> GSM_LOC posizione trovata"); 
+  DEBUG_PRINTLN("gsm_LOC()> GSM_LOC posizione trovata");
   DEBUG_PRINT("Location: Lat");
-        DEBUG_PRINT_MOBILE(latitud, 7);
-        DEBUG_PRINT(",Lon ");
-        DEBUG_PRINTLN_MOBILE(longitud, 7);
-        DEBUG_PRINT("Accuracy: +/- ");
-        DEBUG_PRINT(accuratezza);
-        DEBUG_PRINTLN("m\n");
-//        DEBUG_PRINTLN();
-        Pubblica(FEED_DEBUG, String("Triangolazione cella COMPLETA").c_str());
+  DEBUG_PRINT_MOBILE(latitud, 7);
+  DEBUG_PRINT(",Lon ");
+  DEBUG_PRINTLN_MOBILE(longitud, 7);
+  DEBUG_PRINT("Accuracy: +/- ");
+  DEBUG_PRINT(accuratezza);
+  DEBUG_PRINTLN("m\n");
+  //        DEBUG_PRINTLN();
+  Pubblica(FEED_DEBUG, String("Triangolazione cella COMPLETA").c_str());
 }
