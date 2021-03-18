@@ -11,7 +11,14 @@ Il sistema funziona mediante batteria e GPRS ed è basato sulla scheda Arduino M
 - [Schema e Montaggio](#Schema-e-Montaggio)
     - [Schema](#Schema)
     - [Descrizione componenti](#Descrizione-componenti)
+- [Configurazione](#Configurazione)
+    - [SIM](#SIM)
+    - [Telegram](#Telegram)
+    - [Adafruit MQTT broker](#Adafruit-MQTT-broker)
 - [Installazione](#Installazione)
+    - [Installazione scheda](#Installazione-scheda)
+    - [Librerie](#Librerie)
+    - [Caricare programma Arduino](#Caricare-programma-Arduino)
 
 
 # Componenti
@@ -54,6 +61,46 @@ Il sistema funziona mediante batteria e GPRS ed è basato sulla scheda Arduino M
 - #### Batteria
     La capacità della batteria è stata scelta per garantire il funzionamento con contiua trasmissione per approssimativamente un paio di giorni. L'autonomia effettiva è molto maggiore perché per la maggior parte del tempo la scheda riduce i consumi limitando le attività svolte; in aggiunta il pannello solare, se esposto al sole per qualche ora al giorno, è sufficiente per conpensare l'energia consumata durante la notte.
 
+    
+
+# Configurazione
+
+## SIM
+
+
+## Telegram
+
+## Adafruit MQTT broker
+
 
 
 # Installazione
+
+## Installazione scheda
+Selezionare la scheda `Arduino MKR GSM 1400` dal menu `Toos > Board` oppure `Strumenti > Scheda`
+
+Se è la prima volta che si programma la scheda MKR GSM 1400 è probabile che essa non sia presente nella lista delle schede disponibili, in tal caso è necessario aggiungerla:
+- Aprire il gestore schede `Toos > Board > Boards Manager` oppure `Strumenti > Scheda > Gestore Schede`
+- Cercare `Arduino MKR GSM 1400`
+- Installare con l'apposito pulsante le schede `Arduino SAMD boards (32-bits ARM Cortex-M0+)`
+- Attendere il download e l'Installazione
+- Tornare dal menu `Toos > Board` oppure `Strumenti > Scheda` e selezionare la scheda `Arduino MKR GSM 1400` ora disponibile tra le opzioni (potrebbe essere in un sotto-menu differente rispetto alle altre)
+
+
+## Librerie
+Copiare le cartelle contenute in [librerie](#librerie) nella cartella `libraries` contenuta nella cartella degli sketch di default di Arduino (il percorso di questa cartella è indicato in `File > Preferences > Sketchbook location`).
+
+In alternativa è possibile comprimere ogni cartella in un file zip separato e includerle manualmente una ad una dal `Sketch > Include Library > Add .ZIP Library ...` oppure `Sketch > #include libreria > Aggiungi libreria da file .ZIP ...`
+
+Si **sconsiglia** di utilizzare il gestore librerie per evitare problemi di retrocompatibilità, per lo stesso motivo si **sconsiglia** di aggiornare queste librerie alla versione più recente, come spesso proposto dall'IDE di Arduino.
+
+Di seguito le versioni delle librerie utilizzate:
+Nome | Versione | Link riferimento
+:-:|:-:|:-:
+HX711 | v0.1 | [reference](https://github.com/bogde/HX711.git)
+MKRGSM | v1.3.2 | [reference](http://www.arduino.cc/en/Reference/MKRGSM)
+NeoGPS | v4.2.9 | [reference](https://github.com/SlashDevin/NeoGPS)
+PubSubClient | v2.6 | [reference](http://pubsubclient.knolleary.net)
+RTCZero | v1.5.2 | [reference](http://www.arduino.cc/en/Reference/RTC)
+
+## Caricare programma Arduino
