@@ -1,5 +1,5 @@
 # Ignore secrets.h file because it store credentials
-secrets.h
+/secrets.h
 
 # Prerequisites
 *.d
