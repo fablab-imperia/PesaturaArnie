@@ -67,7 +67,6 @@ Il sistema funziona mediante batteria e GPRS ed è basato sulla scheda Arduino M
 
 ## SIM
 
-
 ## Telegram
 
 ## Adafruit MQTT broker
@@ -82,7 +81,8 @@ Selezionare la scheda `Arduino MKR GSM 1400` dal menu `Toos > Board` oppure `Str
 Se è la prima volta che si programma la scheda MKR GSM 1400 è probabile che essa non sia presente nella lista delle schede disponibili, in tal caso è necessario aggiungerla:
 - Aprire il gestore schede `Toos > Board > Boards Manager` oppure `Strumenti > Scheda > Gestore Schede`
 - Cercare `Arduino MKR GSM 1400`
-- Installare con l'apposito pulsante le schede `Arduino SAMD boards (32-bits ARM Cortex-M0+)`
+- **Selezionare la versione 1.6.21**
+- Installare con l'apposito pulsante le schede `Arduino SAMD boards (32-bits ARM Cortex-M0+)` (assicurarsi di aver selezinato la versione corretta, le versioni successive non sono compatibili con le versioni delle librerie utilizzate, è quindi sconsiglia aggiornare alle versioni più recenti)
 - Attendere il download e l'Installazione
 - Tornare dal menu `Toos > Board` oppure `Strumenti > Scheda` e selezionare la scheda `Arduino MKR GSM 1400` ora disponibile tra le opzioni (potrebbe essere in un sotto-menu differente rispetto alle altre)
 
