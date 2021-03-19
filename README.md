@@ -95,12 +95,21 @@ In alternativa è possibile comprimere ogni cartella in un file zip separato e i
 Si **sconsiglia** di utilizzare il gestore librerie per evitare problemi di retrocompatibilità, per lo stesso motivo si **sconsiglia** di aggiornare queste librerie alla versione più recente, come spesso proposto dall'IDE di Arduino.
 
 Di seguito le versioni delle librerie utilizzate:
-Nome | Versione | Link riferimento
-:-:|:-:|:-:
-HX711 | v0.1 | [reference](https://github.com/bogde/HX711.git)
-MKRGSM | v1.3.2 | [reference](http://www.arduino.cc/en/Reference/MKRGSM)
-NeoGPS | v4.2.9 | [reference](https://github.com/SlashDevin/NeoGPS)
-PubSubClient | v2.6 | [reference](http://pubsubclient.knolleary.net)
-RTCZero | v1.5.2 | [reference](http://www.arduino.cc/en/Reference/RTC)
+     Nome     | Versione | Link riferimento
+:------------:|:--------:|:-----------------------------------------------------:
+    HX711     |  v0.1    | [reference](https://github.com/bogde/HX711.git)
+    MKRGSM    |  v1.3.2  | [reference](http://www.arduino.cc/en/Reference/MKRGSM)
+    NeoGPS    |  v4.2.9  | [reference](https://github.com/SlashDevin/NeoGPS)
+ PubSubClient |  v2.6    | [reference](http://pubsubclient.knolleary.net)
+    RTCZero   |  v1.5.2  | [reference](http://www.arduino.cc/en/Reference/RTC)
 
 ## Caricare programma Arduino
+**NOTA**: affinché il caricamento vada a buon fine e il tutto funzioni correttamente bisogna assicurarsi che tutte le [configurazioni](#Configurazioni) e [installazioni](#Installazione) precedenti siano state svolte.
+
+- Scaricare il repository da github dall'intefaccia grafica del sito (pulsante Code > Download zip; estrarre poi l'archivio scaricato) oppure da riga di comando con `git clone https://github.com/fablab-imperia/PesaturaArnie.git`
+- Aprire il file `PesaturaArnie/PesaturaArnie.ino` nell'IDE di Arduino
+- Selezionare la [scheda](#Installazione-scheda) e la porta corretta dal menu `Tools > Port` o `Strumenti > Porta`
+- Compilare e caricare il programma sulla scheda con l'apposito pulsante (il secondo da sinistra, con una freccia verso destra)
+
+
+<!--Non tracciare cambiamenti di secrets.h mantenendolo nel repository: git update-index --assume-unchanged secrets.h -->
