@@ -1,6 +1,9 @@
 # Ignore secrets.h file because it store credentials
 /secrets.h
 
+# Ignore kate swap file
+*.kate-swp
+
 # Prerequisites
 *.d
 
