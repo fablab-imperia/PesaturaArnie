@@ -66,6 +66,12 @@ Il sistema funziona mediante batteria e GPRS ed è basato sulla scheda Arduino M
 # Configurazione
 
 ## SIM
+Si consiglia una SIM IoT a consumo (ad esempio noi abbiamo utilizzato un SIM [ThingsMobile](https://www.thingsmobile.com/business/plans/overview)) che, con un consumo di pochi MB/mese, avrà un costo indicativo di circa 10 €/anno per un funzionamento normale e continuativo.
+
+Per semplicità, ed evitare problemi con il blocco della SIM, si consiglia di rimuovere il PIN dalla SIM inserendola in un telefono cellulare e cercando questa opzione tra le impostazioni del telefono (in alternativa si possono impostare le credenziali nell'apposita sezione del file `secrets.h`, ma questa funzionalità non è stata testata)
+
+In base all'operatore scelto è necessario configurare l'APN dalla [riga 33](https://github.com/fablab-imperia/PesaturaArnie/blob/340e1f83699dbf9c792564b57609034c4c4d1c3a/PesaturaArnie.ino#L33) dove sono già indicati alcuni tra i più diffusi. È sufficiente commentare (con `//` davanti alla riga) tutti gli APN tranne quello desiderato.
+
 
 ## Telegram
 
