@@ -97,11 +97,11 @@ Si **sconsiglia** di utilizzare il gestore librerie per evitare problemi di retr
 Di seguito le versioni delle librerie utilizzate:
      Nome     | Versione | Link riferimento
 :------------:|:--------:|:-----------------------------------------------------:
-    HX711     |  v0.1    | [reference](https://github.com/bogde/HX711.git)
-    MKRGSM    |  v1.3.2  | [reference](http://www.arduino.cc/en/Reference/MKRGSM)
-    NeoGPS    |  v4.2.9  | [reference](https://github.com/SlashDevin/NeoGPS)
- PubSubClient |  v2.6    | [reference](http://pubsubclient.knolleary.net)
-    RTCZero   |  v1.5.2  | [reference](http://www.arduino.cc/en/Reference/RTC)
+HX711         |  v0.1    | [reference](https://github.com/bogde/HX711.git)
+MKRGSM        |  v1.3.2  | [reference](http://www.arduino.cc/en/Reference/MKRGSM)
+NeoGPS        |  v4.2.9  | [reference](https://github.com/SlashDevin/NeoGPS)
+PubSubClient  |  v2.6    | [reference](http://pubsubclient.knolleary.net)
+RTCZero       |  v1.5.2  | [reference](http://www.arduino.cc/en/Reference/RTC)
 
 ## Caricare programma Arduino
 **NOTA**: affinché il caricamento vada a buon fine e il tutto funzioni correttamente bisogna assicurarsi che tutte le [configurazioni](#Configurazioni) e [installazioni](#Installazione) precedenti siano state svolte.
