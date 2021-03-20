@@ -84,7 +84,7 @@ Per ricevere le notifiche con messaggi Telegram è necessatio creare un [BOT Tel
 - Per verificare il corretto funzionamento digitare nella barra di ricerca del browser `https://api.telegram.org/bot<TOKEN>/sendMessage?chat_id=<CHAT_ID>&text=Test`, sostituendo `<TOKEN>` con il token trovato al punto (1) e `<CHAT_ID>` con l'ID trovato al punto (2); la richiesta avrà quindi la forma di `https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/sendMessage?chat_id=123456789&text=Test`
 - Se (dopo aver inviato la richiesta) viene inviato dal BOT un messaggio con il testo `Test` nella chat desiderata si può procedere ai passaggi successivi, altrimenti ricontrollare i passaggi precedenti (se nella pagina del browser la risposta alla richiesta è `Bad Request: chat not found`, l'ID della chat non è corretto; se la risposta è `Unauthorized` il token utilizzato non è valido, in tal caso controllare il token corretto tramite BotFather)
 
-Nel file `secrets.h` sostuire il token di default alla [riga 12](https://github.com/fablab-imperia/PesaturaArnie/blob/47c2bf231c2096f7186dacecbd2dd199e71303bc/secrets.h#L12) coon quello ricavato al punto (1)
+Nel file `secrets.h` sostuire il token di default alla [riga 12](https://github.com/fablab-imperia/PesaturaArnie/blob/47c2bf231c2096f7186dacecbd2dd199e71303bc/secrets.h#L12) con quello ricavato al punto (1)
 
 Sempre nel file `secrets.h` sostuire l'ID della chat di default a cui inviare i messaggi alla [riga 11](https://github.com/fablab-imperia/PesaturaArnie/blob/47c2bf231c2096f7186dacecbd2dd199e71303bc/secrets.h#L11) con l'ID trovato al punto (2)
 
