@@ -74,6 +74,19 @@ In base all'operatore scelto è necessario configurare l'APN dalla [riga 33](htt
 
 
 ## Telegram
+Per ricevere le notifiche con messaggi Telegram è necessatio creare un [BOT Telegram](https://core.telegram.org/bots).
+- Bisogna attivare un bot chiamato [BotFather](https://t.me/botfather) (cercare BotFather dalla ricerca Telegram oppure aprire il link precedente da un dispositivo con Telegram installato)
+- Seguire le istruzioni per la creazione del BOT (`/newbot`, Scegli un nome,  Scegli uno username che termini con 'bot')
+- (1) Nel messaggio finale BotFather invierà un token univoco per il bot, nella forma `123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11`
+- Nell'implementazione attuale le notifiche vengono mandate ad un solo contatto/gruppo, quindi se si vuole che più persone ricevano le notifiche è necessario creare un gruppo con i partecipanti desiderati (tra cui il BOT stesso) e inviare il messaggio `/start` nella chat (per identificare con semplicità l'ID della chat); se invece è sufficiente un solo contatto attivare il BOT dall'account desiderato, aprendo il link inviato da BotFather nell'ultimo messaggio (nella forma di `t.me/username_bot`) e premere il pulsante `START` nella chat che si apre
+- Aprire un browser (ad esempio Firefox) e digitare nella barra di ricerca `https://api.telegram.org/bot<token>/getUpdates`, sostituendo `<TOKEN>` con il token del BOT appena creato; la richiesta avrà quindi la forma di `https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/getUpdates`
+- (2) Il risultato della richiesta è in formato JSON e verrà formattato opportunamente da molti browser. L'ID della chat si trova seguendo il percorso `result > N > chat > id` dove `N` è il maggiore tra i numeri presenti (l'ultimo messaggio). L'ID è un numero intero positivo di 9 cifre nel caso di chat semplici e un numero intero negativo di 9 o 13 cifre nel caso di chat di gruppo
+- Per verificare il corretto funzionamento digitare nella barra di ricerca del browser `https://api.telegram.org/bot<TOKEN>/sendMessage?chat_id=<CHAT_ID>&text=Test`, sostituendo `<TOKEN>` con il token trovato al punto (1) e `<CHAT_ID>` con l'ID trovato al punto (2); la richiesta avrà quindi la forma di `https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/sendMessage?chat_id=123456789&text=Test`
+- Se (dopo aver inviato la richiesta) viene inviato dal BOT un messaggio con il testo `Test` nella chat desiderata si può procedere ai passaggi successivi, altrimenti ricontrollare i passaggi precedenti (se nella pagina del browser la risposta alla richiesta è `Bad Request: chat not found`, l'ID della chat non è corretto; se la risposta è `Unauthorized` il token utilizzato non è valido, in tal caso controllare il token corretto tramite BotFather)
+
+Nel file `secrets.h` sostuire il token di default alla [riga 12](https://github.com/fablab-imperia/PesaturaArnie/blob/47c2bf231c2096f7186dacecbd2dd199e71303bc/secrets.h#L12) coon quello ricavato al punto (1)
+
+Sempre nel file `secrets.h` sostuire l'ID della chat di default a cui inviare i messaggi alla [riga 11](https://github.com/fablab-imperia/PesaturaArnie/blob/47c2bf231c2096f7186dacecbd2dd199e71303bc/secrets.h#L11) con l'ID trovato al punto (2)
 
 ## Adafruit MQTT broker
 
