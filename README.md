@@ -45,6 +45,10 @@ Il sistema funziona mediante batteria e GPRS ed è basato sulla scheda Arduino M
 
 ![Schema elettrico](images/Schematic_Pesatura_arnie_2021-03-17.png)
 
+<p align="center">
+    <img alt="Schema elettrico" src="images/Schematic_Pesatura_arnie_2021-03-17.png" width="60%">
+</p>
+    
 ## Descrizione componenti
 - #### Celle di carico 
     Come indicato in [questo schema](images/schema_bilancia_api.png) i colori (bianco - W, rosso - R, nero - B) dei fili dei singoli sensori di carico possono variare a seconda del produttore, è quindi consigliato controllare con un multimetro la coppia di fili tra cui si ha la maggiore resistenza, essi saranno il + e il - (solitamente sono il bianco e il nero, come mostrato nello schema). Invertendo la polarità di questi due fili i sensori non si danneggeranno, ma la scheda potrebbe misurare variazioni di peso negative, in tal caso invertire questi due fili per tutti i sensori.
@@ -108,7 +112,10 @@ Per mostrare graficamente l'andamento di peso e carica della batteria nell'ultim
 - Regolare le impostazioni di ogni blocco secondo le proprie preferenze (ad esempio tipo di mappa, range e scale dei grafici, durata storico da visualizzare)
 
 Il risultato finale dovrebbe essere simile a questo:
-<img alt="Screenshot Adafruit.io" src="images/Screenshot_2021-03-19_Adafruit_IO.png" width="50%">
+
+<p align="center">
+    <img alt="Screenshot Adafruit.io" src="images/Screenshot_2021-03-19_Adafruit_IO.png" width="50%">
+</p>
     
 
 # Installazione
