@@ -43,8 +43,6 @@ Il sistema funziona mediante batteria e GPRS ed è basato sulla scheda Arduino M
 ## Schema
 **ATTENZIONE**: il convertitore di tensione deve essere regolato tra 5V e 6V (come da [specifiche della scheda](DOC/ABX00018_MKR%20GSM%201400.pdf)) **PRIMA** di essere collegato alla scheda, perché potrebbe essere regolato a tensioni maggiori. Tensioni superiori possono danneggiare irreversibilmente la scheda Arduino. Collegare quindi prima il pannello solare al regolatore di tensione, esporre il pannello al sole e regolare la tensione in uscita tra 5V e 6V usando un multimetro, ruotando il potenziometro sulla scheda (solitamente è di colore blu con un piccolo albero di metallo con testa a taglio in un angolo) fino al raggiungimento del valore desiderato.
 
-![Schema elettrico](images/Schematic_Pesatura_arnie_2021-03-17.png)
-
 <p align="center">
     <img alt="Schema elettrico" src="images/Schematic_Pesatura_arnie_2021-03-17.png" width="60%">
 </p>
