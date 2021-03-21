@@ -89,8 +89,27 @@ Nel file `secrets.h` sostuire il token di default alla [riga 12](https://github.
 Sempre nel file `secrets.h` sostuire l'ID della chat di default a cui inviare i messaggi alla [riga 11](https://github.com/fablab-imperia/PesaturaArnie/blob/47c2bf231c2096f7186dacecbd2dd199e71303bc/secrets.h#L11) con l'ID trovato al punto (2)
 
 ## Adafruit MQTT broker
+Per mostrare graficamente l'andamento di peso e carica della batteria nell'ultimo mese, oltre che la posizione dell'arnia sulla mappa e un colore che permette di monitorare rapidamente lo stato dell'arnia è necessario registrare un account su [adafruit.io](https://accounts.adafruit.com/users/sign_up) oppure effettuare il [log in](https://accounts.adafruit.com/users/sign_in) se si è già registrati.
 
+- Dal menu `Feeds`, con il pulsante `+New Feed` creare i seguenti feeds (volendo i nomi possono essere cambiati, ma devono coincidere con il codice):
+    - Batteria
+    - Debug
+    - Peso
+    - Posizione
+    - Stato
+- Dal menu `Dashboards`, con il pulsante `+New Dashboard` creare una nuova dashboard e aggiungere i seguenti blocchi dalla rotella delle impostazioni in alto a destra > Create New Block:
+    - `Line chart` con feed `Peso`
+    - `Line chart` con feed `Batteria`
+    - `Gauge` con feed `Peso`
+    - `Gauge` con fedd `Batteria`
+    - `Color Picker` con feed `Stato`
+    - `Map` con feed `Posizione`
+    - `Stream` con feed `Debug`
+- Regolare le impostazioni di ogni blocco secondo le proprie preferenze (ad esempio tipo di mappa, range e scale dei grafici, durata storico da visualizzare)
 
+Il risultato finale dovrebbe essere simile a questo:
+<img alt="Screenshot Adafruit.io" src="images/Screenshot_2021-03-19_Adafruit_IO.png" width="50%">
+    
 
 # Installazione
 
