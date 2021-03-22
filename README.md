@@ -44,7 +44,7 @@ Il sistema funziona mediante batteria e GPRS ed è basato sulla scheda Arduino M
 **ATTENZIONE**: il convertitore di tensione deve essere regolato tra 5V e 6V (come da [specifiche della scheda](DOC/ABX00018_MKR%20GSM%201400.pdf)) **PRIMA** di essere collegato alla scheda, perché potrebbe essere regolato a tensioni maggiori. Tensioni superiori possono danneggiare irreversibilmente la scheda Arduino. Collegare quindi prima il pannello solare al regolatore di tensione, esporre il pannello al sole e regolare la tensione in uscita tra 5V e 6V usando un multimetro, ruotando il potenziometro sulla scheda (solitamente è di colore blu con un piccolo albero di metallo con testa a taglio in un angolo) fino al raggiungimento del valore desiderato.
 
 <p align="center">
-    <img alt="Schema elettrico" src="images/Schematic_Pesatura_arnie_2021-03-17.png" width="60%">
+    <img alt="Schema elettrico" src="images/Schematic_Pesatura_arnie_2021-03-17.png" width="80%">
 </p>
     
 ## Descrizione componenti
@@ -114,7 +114,10 @@ Il risultato finale dovrebbe essere simile a questo:
 <p align="center">
     <img alt="Screenshot Adafruit.io" src="images/Screenshot_2021-03-19_Adafruit_IO.png" width="50%">
 </p>
-    
+
+Le credenziali private per inviare dati a questi feed si trovano nella sezione `My Key`.
+Nel file `secrets.h` sostituire lo username alla [riga 6](https://github.com/fablab-imperia/PesaturaArnie/blob/51783324ea72c243f1c004657fd7e8c78f6f7d41/secrets.h#L6) e la AIO Key alla [riga 7](https://github.com/fablab-imperia/PesaturaArnie/blob/51783324ea72c243f1c004657fd7e8c78f6f7d41/secrets.h#L7).
+
 
 # Installazione
 
