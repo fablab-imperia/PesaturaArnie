@@ -18,12 +18,12 @@ Periodo        |Condizione Funzionamento|Consumo|Costo
         <th>Costo</th>
     </tr>
     <tr>
-        <td><img src="images/consumo_dati/Cost_day_normal.png"></td>
-        <td><img src="images/consumo_dati/Traffic_day_normal.png"></td>
+        <td><img src="/images/consumo_dati/Cost_day_normal.png"></td>
+        <td><img src="/images/consumo_dati/Traffic_day_normal.png"></td>
     </tr>
     <tr>
-        <td><img src="images/consumo_dati/Cost_month_normal.png"></td>
-        <td><img src="images/consumo_dati/Traffic_month_normal.png"></td>
+        <td><img src="/images/consumo_dati/Cost_month_normal.png"></td>
+        <td><img src="/images/consumo_dati/Traffic_month_normal.png"></td>
     </tr>
 </table>
 
@@ -38,7 +38,7 @@ Periodo        |Condizione Funzionamento|Consumo|Costo
         <th>Costo</th>
     </tr>
     <tr>
-        <td><img src="images/consumo_dati/Cost_day_alarm.png"></td>
-        <td><img src="images/consumo_dati/Traffic_day_alarm.png"></td>
+        <td><img src="/images/consumo_dati/Cost_day_alarm.png"></td>
+        <td><img src="/images/consumo_dati/Traffic_day_alarm.png"></td>
     </tr>
 </table>
