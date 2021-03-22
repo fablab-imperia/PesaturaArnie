@@ -134,7 +134,7 @@ Se è la prima volta che si programma la scheda MKR GSM 1400 è probabile che es
 
 
 ## Librerie
-Copiare le cartelle contenute in [librerie](#librerie) nella cartella `libraries` contenuta nella cartella degli sketch di default di Arduino (il percorso di questa cartella è indicato in `File > Preferences > Sketchbook location`).
+Copiare le cartelle contenute nella cartella [librerie](librerie/) all'interno nella cartella `libraries` contenuta nella cartella degli sketch di default di Arduino (il percorso di questa cartella è indicato in `File > Preferences > Sketchbook location`).
 
 In alternativa è possibile comprimere ogni cartella in un file zip separato e includerle manualmente una ad una dal `Sketch > Include Library > Add .ZIP Library ...` oppure `Sketch > #include libreria > Aggiungi libreria da file .ZIP ...`
 
