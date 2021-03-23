@@ -68,7 +68,7 @@ Il sistema funziona mediante batteria e GPRS ed è basato sulla scheda Arduino M
 # Configurazione
 
 ## SIM
-Si consiglia una SIM IoT a consumo (ad esempio noi abbiamo utilizzato un SIM [ThingsMobile](https://www.thingsmobile.com/business/plans/overview)) che, con un consumo di pochi MB/mese, avrà un costo indicativo di circa 10 €/anno per un funzionamento normale e continuativo.
+Si consiglia una SIM IoT a consumo (ad esempio noi abbiamo utilizzato un SIM [ThingsMobile](https://www.thingsmobile.com/business/plans/overview)) che, con un consumo di circa 400 KB/mese, avrà un costo indicativo di meno di 1 €/anno per un funzionamento normale e continuativo. I consumi aumentano notevolmente (ma restano comunque molto contenuti, nell'ordine di 0.10 €/giorno) nel caso di allarme per lo spostamento dell'arnia, in quanto il sistema trasmetterà in continuo i dati sulla posizione. Vedere l'[analisi del consumo dati](images/consumo_dati/) durante i test per maggiori dettagli.
 
 Per semplicità, ed evitare problemi con il blocco della SIM, si consiglia di rimuovere il PIN dalla SIM inserendola in un telefono cellulare e cercando questa opzione tra le impostazioni del telefono (in alternativa si possono impostare le credenziali nell'apposita sezione del file `secrets.h`, ma questa funzionalità non è stata testata)
 
