@@ -7,7 +7,7 @@ Periodo        |Condizione Funzionamento|Consumo|Costo
 1 mese         | Normale                |400 kB | 0.05 €
 1 anno (stima) | Normale                |5 MB   | 0.60 €
 
-
+<hr>
 
 <table style="padding: 10px;">
     <tr>
@@ -27,7 +27,10 @@ Periodo        |Condizione Funzionamento|Consumo|Costo
     </tr>
 </table>
 
+Il sistema ha funzionato in continuo per tutto il mese di Agosto, mentre è stato acceso solo per alcuni giorni a Luglio, per cui il consumo mensile per il mese di luglio non è completo.
 
+
+<hr>
 
 <table style="padding: 10px;">
     <tr>
